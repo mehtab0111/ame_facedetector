@@ -2,6 +2,7 @@ import 'package:ame_facedetector/View/Components/buttons.dart';
 import 'package:ame_facedetector/View/Screens/addEmployee.dart';
 import 'package:ame_facedetector/View/Screens/employees.dart';
 import 'package:ame_facedetector/View/Screens/transactionsLog.dart';
+import 'package:ame_facedetector/View/Screens/commandStatus.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -23,21 +24,18 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             // Row(),
-            profileButton(Icons.abc, 'Employee', () {
+            profileButton(Icons.badge_outlined, 'Employee', () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => Employees()));
             }),
-            profileButton(Icons.abc, 'Add Employee', () {
+            profileButton(Icons.person_add_outlined, 'Add Employee', () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => AddEmployee()));
             }),
-            profileButton(Icons.abc, 'Transactions Log', () {
+            profileButton(Icons.gavel_outlined, 'Command Status', () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => CommandStatus()));
+            }),
+            profileButton(Icons.receipt_long_outlined, 'Transactions Log', () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => TransactionLog()));
             }),
-            // KButton(
-            //   onClick: (){
-            //     Navigator.push(context, MaterialPageRoute(builder: (context) => AddEmployee()));
-            //   },
-            //   title: 'Add Employee',
-            // ),
           ],
         ),
       ),

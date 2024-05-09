@@ -25,6 +25,7 @@ class _AddEmployeeState extends State<AddEmployee> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text('Add Employee'),
       ),
       body: SingleChildScrollView(
@@ -32,6 +33,7 @@ class _AddEmployeeState extends State<AddEmployee> {
           key: _formKey,
           child: Column(
             children: [
+              SizedBox(height: 5),
               KTextField(
                 title: 'Employee Code',
                 controller: employeeCode,

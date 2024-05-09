@@ -1,6 +1,8 @@
 import 'package:ame_facedetector/View/Components/textField.dart';
+import 'package:ame_facedetector/View/Components/DialogueBox/deletePopUp.dart';
 import 'package:ame_facedetector/View/Theme/style.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class Employees extends StatefulWidget {
   const Employees({super.key});
@@ -25,13 +27,13 @@ class _EmployeesState extends State<Employees> {
   }
 
   void getEmployeeList() async {
-    // String url = APIData.employeeList;
+    // String url = 'APIData.employeeList';
     // var res = await http.post(Uri.parse(url), headers: {
     //   'Authorization': 'Bearer ${ServiceManager.tokenID}',
     // });
     // if(res.statusCode == 200){
-    //   var data = jsonDecode(res.body);
-    //   _streamController.add(data['Employee_list']);
+    //   // var data = jsonDecode(res.body);
+    //   // _streamController.add(data['Employee_list']);
     // } else {
     //   // print(res.statusCode);
     //   // print(res.body);
@@ -66,7 +68,7 @@ class _EmployeesState extends State<Employees> {
     // final employeeProvider = Provider.of<EmployeeProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        // backgroundColor: k2MainColor,
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // centerTitle: true,
         titleSpacing: 0.0,
         // title: Text('Users'.toUpperCase()),
@@ -111,7 +113,8 @@ class _EmployeesState extends State<Employees> {
               ListView.builder(
                 shrinkWrap: true,
                 physics: NeverScrollableScrollPhysics(),
-                itemCount: userLength < _filteredItem.length ? userLength : _filteredItem.length,
+                itemCount: 2,
+                // itemCount: userLength < _filteredItem.length ? userLength : _filteredItem.length,
                 // itemCount: employeeProvider.employeeList.length,
                 itemBuilder: (context , index){
                   // final data = employeeProvider.employeeList;
@@ -121,7 +124,7 @@ class _EmployeesState extends State<Employees> {
                     child: Stack(
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(top: 10.0, left: 30.0),
+                          padding: const EdgeInsets.only(top: 10.0, left: 10.0),
                           child: Container(
                             padding: EdgeInsets.all(10.0),
                             decoration: roundedContainerDesign(context).copyWith(
@@ -135,9 +138,12 @@ class _EmployeesState extends State<Employees> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       // Text('ID: ${docs[index]['employee_id']}'),
-                                      kRowText('Name: ', data[index].name),
-                                      kRowText('Mobile: ', data[index].mobile),
-                                      kRowText('Email: ', data[index].email),
+                                      // kRowText('Name: ', data[index].name),
+                                      // kRowText('Mobile: ', data[index].mobile),
+                                      // kRowText('Email: ', data[index].email),
+                                      kRowText('Name: ', 'User 01'),
+                                      kRowText('Mobile: ', '+919000456764'),
+                                      kRowText('Email: ', 'user.dits@gmail.com'),
                                     ],
                                   ),
                                 ),
@@ -149,20 +155,29 @@ class _EmployeesState extends State<Employees> {
                                   },
                                   icon: Icon(Icons.edit_outlined),
                                 ),
+                                // IconButton(
+                                //   onPressed: (){
+                                //     deletePopUp(context, onClickYes: (){
+                                //
+                                //     });
+                                //   },
+                                //   icon: Icon(Icons.delete_forever_outlined),
+                                // ),
                               ],
                             ),
                           ),
                         ),
                         Container(
-                          height: 100,
-                          width: 100,
+                          height: 80,
+                          width: 80,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(10.0),
                             boxShadow: boxShadowDesign(),
-                            image: data[index].image != '' ? DecorationImage(
-                              image: NetworkImage(data[index].image),
-                              fit: BoxFit.cover,
-                            ) : DecorationImage(
+                            // image: data[index].image != '' ? DecorationImage(
+                            //   image: NetworkImage(data[index].image),
+                            //   fit: BoxFit.cover,
+                            // ) :
+                            image: DecorationImage(
                               image: AssetImage('images/img_blank_profile.png'),
                               fit: BoxFit.cover,
                             ),

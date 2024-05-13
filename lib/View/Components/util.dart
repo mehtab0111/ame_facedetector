@@ -1,18 +1,19 @@
 import 'package:ame_facedetector/View/Theme/colors.dart';
 import 'package:ame_facedetector/View/Theme/style.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
 
-// void toastMessage({required String message, Color? colors}){
-//   Fluttertoast.showToast(
-//     msg: message,
-//     toastLength: Toast.LENGTH_SHORT,
-//     gravity: ToastGravity.BOTTOM,
-//     timeInSecForIosWeb: 1,
-//     backgroundColor: colors ?? Color(0xFF8DBF8B),
-//     textColor: kWhiteColor,
-//     fontSize: 16.0,
-//   );
-// }
+void toastMessage({required String message, Color? colors}){
+  Fluttertoast.showToast(
+    msg: message,
+    toastLength: Toast.LENGTH_SHORT,
+    gravity: ToastGravity.BOTTOM,
+    timeInSecForIosWeb: 1,
+    backgroundColor: colors ?? Color(0xFF8DBF8B),
+    textColor: kWhiteColor,
+    fontSize: 16.0,
+  );
+}
 
 GestureDetector kIconDesign(context, {
   required String image,

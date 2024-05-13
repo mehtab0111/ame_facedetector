@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ame_facedetector/Controller/serviceManager.dart';
 import 'package:ame_facedetector/View/Screens/homePage.dart';
+import 'package:ame_facedetector/View/Screens/Auth/login.dart';
 import 'package:ame_facedetector/View/Theme/style.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,15 +23,15 @@ class _SplashScreenState extends State<SplashScreen> {
     ServiceManager().getUserID();
     _timer = Timer.periodic(Duration(seconds: 2), (timer) {
       if(ServiceManager.userID != ''){
-        // ServiceManager().getUserData();
-        // Navigator.pushAndRemoveUntil(context, MaterialPageRoute(
-        //     builder: (context) => NavigationScreen()), (route) => false);
+        ServiceManager().getUserData();
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(
+            builder: (context) => HomePage()), (route) => false);
       } else {
-        // Navigator.of(context).pushReplacement(
-        //     MaterialPageRoute(builder: (_) => Login()));
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => Login()));
       }
-      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => HomePage()));
+      // Navigator.of(context).pushReplacement(
+      //     MaterialPageRoute(builder: (_) => HomePage()));
     });
   }
 

@@ -1,4 +1,5 @@
 import 'package:ame_facedetector/View/Components/buttons.dart';
+import 'package:ame_facedetector/View/Screens/Auth/faceDetection.dart';
 import 'package:ame_facedetector/View/Screens/addEmployee.dart';
 import 'package:ame_facedetector/View/Screens/employees.dart';
 import 'package:ame_facedetector/View/Screens/transactionsLog.dart';
@@ -24,6 +25,13 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             // Row(),
+            SizedBox(height: 5),
+            KButton(
+              title: 'Clock In Employee',
+              onClick: (){
+                Navigator.push(context, MaterialPageRoute(builder: (context) => FaceDetectionPage()));
+              },
+            ),
             profileButton(Icons.badge_outlined, 'Employee', () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => Employees()));
             }),

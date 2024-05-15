@@ -169,7 +169,7 @@ packages:
     source: hosted
     version: "0.12.0"
   google_mlkit_commons:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: google_mlkit_commons
       sha256: "27d626c66a181351a953eba5b6ff1ff123aadb891b4dab085b292118f039d6ac"
@@ -193,7 +193,7 @@ packages:
     source: hosted
     version: "0.13.0"
   google_mlkit_face_detection:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: google_mlkit_face_detection
       sha256: "5b597061cafe4dfa70f66adddadd19381eb88bd3312b074528c62b246392304b"
@@ -300,10 +300,10 @@ packages:
     dependency: transitive
     description:
       name: image_picker_android
-      sha256: "79455f6cff4cbef583b2b524bbf0d4ec424e5959f4d464e36ef5323715b98370"
+      sha256: "0f57fee1e8bfadf8cc41818bbcd7f72e53bb768a54d9496355d5e8a5681a19f1"
       url: "https://pub.dev"
     source: hosted
-    version: "0.8.12"
+    version: "0.8.12+1"
   image_picker_for_web:
     dependency: transitive
     description:

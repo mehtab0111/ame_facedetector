@@ -14,7 +14,7 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
 
   Future<void> _getImageAndDetectFaces() async {
     final imagePicker = ImagePicker();
-    final imageFile = await imagePicker.pickImage(source: ImageSource.camera);
+    final imageFile = await imagePicker.pickImage(source: ImageSource.gallery);
 
     final inputImage = InputImage.fromFile(File(imageFile!.path));
     final faceDetector = GoogleMlKit.vision.faceDetector();
@@ -33,9 +33,7 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
         title: Text('Face Detection'),
       ),
       body: Center(
-        child: _imageFile == null
-            ? Text('No image selected.')
-            : FittedBox(
+        child: _imageFile == null ? Text('No image selected.') : FittedBox(
           child: SizedBox(
             // width: _imageFile!.width.toDouble(),
             // height: _imageFile!.height.toDouble(),

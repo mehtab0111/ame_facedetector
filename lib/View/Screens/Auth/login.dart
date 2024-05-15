@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:ame_facedetector/View/Theme/style.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -50,7 +51,16 @@ class _LoginState extends State<Login> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    KTextField(title: 'Email', controller: email,),
+                    KTextField(
+                      title: 'Email',
+                      controller: email,
+                      // validate: (value) {
+                      //   if (value == null || value.isEmpty || !value.contains('@') || !value.contains('.')) {
+                      //     return 'Enter a valid email address';
+                      //   }
+                      //   return null;
+                      // },
+                    ),
                     KTextField(
                       title: 'Password',
                       controller: password,
@@ -64,16 +74,7 @@ class _LoginState extends State<Login> {
                         icon: Icon(textObscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
                       ),
                     ),
-                    // SizedBox(height: 20.0),
-                    TextButton(
-                      onPressed: (){
-                        // Navigator.push(context, MaterialPageRoute(builder: (context) => ForgetPassword()));
-                      },
-                      child: Text('Forget Password?',
-                        style: TextStyle(color: kRedColor),
-                      ),
-                    ),
-                    // if(buttonEnabled)
+                    kSpace(),
                     isLoading != true ? KButton(
                       title: 'Continue',
                       onClick: (){
@@ -106,28 +107,6 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ],
-          ),
-        ),
-        floatingActionButton: Container(
-          height: 35,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30.0),
-            border: Border.all(width: 1),
-          ),
-          child: MaterialButton(
-            minWidth: 70,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30.0),
-            ),
-            onPressed: (){
-              setState(() {
-                // ServiceManager.userID = '';
-                // ServiceManager.userName = '';
-                // ServiceManager.profileURL = '';
-              });
-              Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
-            },
-            child: Text('Skip'),
           ),
         ),
       ),

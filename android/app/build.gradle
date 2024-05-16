@@ -46,7 +46,7 @@ android {
         applicationId "com.devant.ame_facedetector"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -71,4 +71,6 @@ dependencies {
     implementation 'com.android.support:multidex:2.0.1'
     implementation platform('com.google.firebase:firebase-bom:33.0.0')
     implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.mlkit:face-detection:16.1.6'
+    implementation 'com.google.android.gms:play-services-mlkit-face-detection:17.1.0'
 }

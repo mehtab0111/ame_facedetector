@@ -30,8 +30,8 @@ class _HomePageState extends State<HomePage> {
             KButton(
               title: 'Clock In Employee',
               onClick: (){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => FaceDetectionPage()));
-                // Navigator.push(context, MaterialPageRoute(builder: (context) => FaceRecognize()));
+                // Navigator.push(context, MaterialPageRoute(builder: (context) => FaceDetectionPage()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => FaceRecognize()));
               },
             ),
             profileButton(Icons.badge_outlined, 'Employee', () {

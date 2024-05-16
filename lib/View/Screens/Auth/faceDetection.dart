@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,21 +10,28 @@ class FaceDetectionPage extends StatefulWidget {
 }
 
 class _FaceDetectionPageState extends State<FaceDetectionPage> {
+
   File? _imageFile;
   List<Face> _faces = [];
 
   Future<void> _getImageAndDetectFaces() async {
     final imagePicker = ImagePicker();
-    final imageFile = await imagePicker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
 
-    final inputImage = InputImage.fromFile(File(imageFile!.path));
-    final faceDetector = GoogleMlKit.vision.faceDetector();
-    final List<Face> faces = await faceDetector.processImage(inputImage);
+    if (pickedFile == null) return;
+
+    final File imageFile = File(pickedFile.path);
+    final imageSize = await _getImageSize(imageFile);
 
     setState(() {
-      _imageFile = File(imageFile.path);
-      _faces = faces;
+      _imageFile = imageFile;
     });
+  }
+
+  Future<Size> _getImageSize(File imageFile) async {
+    final bytes = await imageFile.readAsBytes();
+    final image = await decodeImageFromList(Uint8List.fromList(bytes));
+    return Size(image.width.toDouble(), image.height.toDouble());
   }
 
   @override

@@ -17,13 +17,13 @@ dependencies:
   shared_preferences: ^2.2.3
   http: ^1.2.1
   fluttertoast: ^8.2.5
-  google_ml_kit: ^0.18.0
+#  google_ml_kit: ^0.18.0
   image_picker: ^1.1.1
-  google_mlkit_face_detection: ^0.11.0
-  google_mlkit_commons: ^0.7.1
-  amplify_flutter: ^1.0.0
-  amplify_auth_cognito: ^1.0.0
-  amplify_authenticator: ^1.0.0
+#  google_mlkit_face_detection: ^0.11.0
+#  google_mlkit_commons: ^0.7.1
+  aws_s3_api: ^2.0.0
+  aws_rekognition_api: ^2.0.0
+#  flutter_dotenv: ^5.0.2
 
 dev_dependencies:
   flutter_test:

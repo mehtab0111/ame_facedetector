@@ -1,3 +1,4 @@
+import 'package:ame_facedetector/Controller/location.dart';
 import 'package:ame_facedetector/View/Components/buttons.dart';
 import 'package:ame_facedetector/faceDetectionScreen.dart';
 import 'package:ame_facedetector/View/Screens/addEmployee.dart';
@@ -14,6 +15,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
+  @override
+  void initState() {
+    super.initState();
+    LocationService().fetchLocation();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

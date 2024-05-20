@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:ame_facedetector/Model/user_model.dart';
+import 'package:ame_facedetector/Controller/location.dart';
 import 'package:ame_facedetector/View/Components/buttons.dart';
 import 'package:ame_facedetector/View/Components/kDatabase.dart';
 import 'package:ame_facedetector/View/Components/textField.dart';
@@ -7,6 +7,7 @@ import 'package:ame_facedetector/View/Theme/style.dart';
 import 'package:ame_facedetector/awsconfig.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 class FaceDetectionScreen extends StatefulWidget {
   @override
@@ -14,6 +15,10 @@ class FaceDetectionScreen extends StatefulWidget {
 }
 
 class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
+
+  // CameraController? _controller;
+  // late FaceDetector _faceDetector;
+  // bool _isDetecting = false;
 
   // Users? selectedUser;
   String employeeValue = '';
@@ -29,7 +34,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
     setState(() {
       isLoading = true;
     });
-    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       // await detectFaces(pickedFile.path);
@@ -41,28 +46,157 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
         _image = File(pickedFile.path);
       });
       isLoading = false;
+
+      ///label
+      labels = await detectCustomLabels(_image!.path);
+      print(labels);
+      setState(() {});
     }
   }
+
+  List<String> labels = [];
+
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _initializeCamera();
+  //   _faceDetector = FaceDetector(
+  //     options: FaceDetectorOptions(
+  //       enableLandmarks: true,
+  //       enableContours: true,
+  //     ),
+  //   );
+  // }
+  //
+  // Future<void> _initializeCamera() async {
+  //   final cameras = await availableCameras();
+  //   final camera = cameras.first;
+  //
+  //   _controller = CameraController(camera, ResolutionPreset.medium);
+  //   await _controller?.initialize();
+  //   _startFaceDetection();
+  //   setState(() {});
+  // }
+  //
+  // void _startFaceDetection() {
+  //   _controller?.startImageStream((CameraImage image) {
+  //     if (_isDetecting) return;
+  //     _isDetecting = true;
+  //
+  //     final WriteBuffer allBytes = WriteBuffer();
+  //     for (Plane plane in image.planes) {
+  //       allBytes.putUint8List(plane.bytes);
+  //     }
+  //     final bytes = allBytes.done().buffer.asUint8List();
+  //
+  //     final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
+  //
+  //     final InputImageRotation imageRotation = _rotationIntToImageRotation(
+  //         _controller!.description.sensorOrientation);
+  //
+  //     final InputImageFormat inputImageFormat = _imageFormatFromRawValue(image.format.raw);
+  //
+  //     final planeData = image.planes.map(
+  //           (Plane plane) {
+  //         return InputImagePlaneMetadata(
+  //           bytesPerRow: plane.bytesPerRow,
+  //           height: plane.height,
+  //           width: plane.width,
+  //         );
+  //       },
+  //     ).toList();
+  //
+  //     final inputImageData = InputImageData(
+  //       size: imageSize,
+  //       imageRotation: imageRotation,
+  //       inputImageFormat: inputImageFormat,
+  //       planeData: planeData,
+  //     );
+  //
+  //     final inputImage = InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
+  //
+  //     _faceDetector.processImage(inputImage).then((faces) async {
+  //       if (faces.isNotEmpty) {
+  //         // Stop the camera
+  //         await _controller?.stopImageStream();
+  //         _captureImage();
+  //       }
+  //       _isDetecting = false;
+  //     });
+  //   });
+  // }
+  //
+  // InputImageRotation _rotationIntToImageRotation(int rotation) {
+  //   switch (rotation) {
+  //     case 90:
+  //       return InputImageRotation.rotation90deg;
+  //     case 180:
+  //       return InputImageRotation.rotation180deg;
+  //     case 270:
+  //       return InputImageRotation.rotation270deg;
+  //     default:
+  //       return InputImageRotation.rotation0deg;
+  //   }
+  // }
+  //
+  // InputImageFormat _imageFormatFromRawValue(int rawValue) {
+  //   switch (rawValue) {
+  //     case 17: // ImageFormat.NV21
+  //       return InputImageFormat.nv21;
+  //     case 35: // ImageFormat.YUV_420_888
+  //       return InputImageFormat.yuv420;
+  //     default:
+  //       return InputImageFormat.bgra8888; // default format
+  //   }
+  // }
+
+  // Future<void> _captureImage() async {
+  //   final XFile file = await _controller!.takePicture();
+  //   // Handle the captured image, e.g., save it or display it
+  //   print('Captured image: ${file.path}');
+  // }
+  //
+  // @override
+  // void dispose() {
+  //   _controller?.dispose();
+  //   _faceDetector.close();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
+        // centerTitle: true,
         title: Text('Employee Attendance'),
-        // actions: [
-        //   TextButton(
-        //     onPressed: (){
-        //       listFaceCollections();
-        //     },
-        //     child: Text('Test Data'),
-        //   ),
-        // ],
+        actions: [
+          // TextButton(
+          //   onPressed: () async {
+          //     stopProjectVersion();
+          //   },
+          //   child: Text('Stop Model'),
+          // ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
-            Text('Select Employee'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Location', style: k14BoldStyle()),
+                  Text(LocationService.userLocation),
+                  Text('Latitude: ${LocationService.userLatitude}'),
+                  Text('Longitude: ${LocationService.userLongitude}'),
+                  Text('Time: ${DateFormat('dd-MM-yyyy - hh:mm a').format(DateTime.parse('${DateTime.now()}'))}'),
+                  kSpace(),
+                  // Text('Select Employee', style: k14BoldStyle()),
+                ],
+              ),
+            ),
             Padding(
               padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
               child: Container(
@@ -115,6 +249,16 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
             kSpace(),
             if(_image != null)
             Image.file(File(_image!.path), height: 200,),
+
+            ListView.builder(
+              shrinkWrap: true,
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: labels.length,
+              itemBuilder: (context, index){
+                return Text(labels[index]);
+              },
+            ),
             if(employeeName != '')
             matchPercentage > 90 ?
             Column(

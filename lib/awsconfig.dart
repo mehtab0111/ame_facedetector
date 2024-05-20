@@ -1,8 +1,11 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:aws_rekognition_api/rekognition-2016-06-27.dart';
-// import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+
+// MODEL_ARN=arn:aws:rekognition:us-east-1:your_account_id:AME_faceDetection.2024-05-16T16.40.47
+
+const String projectVersionArn = 'arn:aws:rekognition:us-east-1:905418202651:project/AME_faceDetection/version/AME_faceDetection.2024-05-16T16.40.47/1715857848924';
 
 Rekognition? _rekognition;
 
@@ -15,25 +18,72 @@ void initRekognition() {
   _rekognition = Rekognition(region: 'us-east-1', credentials: credentials);
 }
 
-Future<void> listFaceCollections() async {
+Future<void> startProjectVersion() async {
   try {
-    // Initialize AWS Rekognition client
-    final rekognition = Rekognition(region: 'us-east-1');
+    await _rekognition!.startProjectVersion(
+      projectVersionArn: projectVersionArn,
+      minInferenceUnits: 1,
+    );
 
-    // List face collections
-    final response = await rekognition.listCollections();
+    // Wait until the model is running
+    bool isRunning = false;
+    while (!isRunning) {
+      final response = await _rekognition!.describeProjectVersions(
+        projectArn: projectVersionArn.split('/version/')[0],
+      );
 
-    // Process the response
-    for (var collectionId in response.collectionIds!) {
-      print('Face collection ID: $collectionId');
+      final projectVersion = response.projectVersionDescriptions!.firstWhere(
+            (version) => version.projectVersionArn == projectVersionArn,
+      );
+
+      if (projectVersion.status == 'RUNNING') {
+        isRunning = true;
+      } else {
+        await Future.delayed(Duration(seconds: 10)); // Wait before checking again
+      }
     }
-
-    print('Hello test data');
   } catch (e) {
-    print('Error listing face collections: $e');
+    print('Error starting project version: $e');
   }
 }
 
+
+Future<void> stopProjectVersion() async {
+  try {
+    await _rekognition!.stopProjectVersion(
+      projectVersionArn: projectVersionArn,
+    );
+    print('Project version stopped successfully.');
+  } catch (e) {
+    print('Error stopping project version: $e');
+  }
+}
+
+Future<List<String>> detectCustomLabels(String imagePath) async {
+  try {
+    // await startProjectVersion();
+
+    final imageBytes = await File(imagePath).readAsBytes();
+    final image = Image(bytes: Uint8List.fromList(imageBytes));
+
+    final response = await _rekognition!.detectCustomLabels(
+      projectVersionArn: projectVersionArn,
+      image: image,
+    );
+
+    List<String> labels = [];
+    for (var customLabel in response.customLabels!) {
+      labels.add('Label: ${customLabel.name}, Confidence: ${customLabel.confidence}');
+    }
+
+    return labels;
+  } catch (e) {
+    print('Error detecting custom labels: $e');
+    return [];
+  }
+}
+
+///detect faces
 Future<void> detectFaces(String imagePath) async {
   try {
     print('Started detecting faces...');

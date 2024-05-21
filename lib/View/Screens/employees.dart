@@ -1,6 +1,9 @@
 import 'package:ame_facedetector/View/Components/textField.dart';
 import 'package:ame_facedetector/View/Components/DialogueBox/deletePopUp.dart';
+import 'package:ame_facedetector/View/Components/util.dart';
 import 'package:ame_facedetector/View/Theme/style.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -13,8 +16,9 @@ class Employees extends StatefulWidget {
 
 class _EmployeesState extends State<Employees> {
 
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   // final StreamController _streamController = StreamController();
-  final ScrollController _scrollController = ScrollController();
+  // final ScrollController _scrollController = ScrollController();
   TextEditingController searchText = TextEditingController();
 
   bool search = false;
@@ -23,10 +27,24 @@ class _EmployeesState extends State<Employees> {
   @override
   void initState() {
     super.initState();
-    // getEmployeeList();
+    getEmployeeList();
   }
 
   void getEmployeeList() async {
+
+    try{
+      var collection = _firestore.collection('employee');
+      var docs = await collection.doc('7HYirTJ9qlMhbm2M8E2U').get();
+      if(docs.exists){
+        print(docs);
+      } else {
+        print('doesnt have data');
+      }
+    } catch (e){
+      print('Error: $e');
+    }
+
+
     // String url = 'APIData.employeeList';
     // var res = await http.post(Uri.parse(url), headers: {
     //   'Authorization': 'Bearer ${ServiceManager.tokenID}',
@@ -95,113 +113,111 @@ class _EmployeesState extends State<Employees> {
           ),
         ],
       ),
-      body: NotificationListener<ScrollNotification>(
-        onNotification: (notification) {
-          if (notification is ScrollEndNotification &&
-              _scrollController.position.extentAfter == 0) {
-            userLength = userLength+10;
-            setState(() {});
-            return true;
+      body: StreamBuilder(
+        stream: _firestore.collection('employee').snapshots(),
+        builder: (context, snapshot) {
+          if(snapshot.hasData){
+            var data = snapshot.data!.docs;
+            return SingleChildScrollView(
+              // controller: _scrollController,
+              child: Column(
+                children: [
+                  // _filteredItem.isNotEmpty ?
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: data.length,
+                    // itemCount: userLength < _filteredItem.length ? userLength : _filteredItem.length,
+                    // itemCount: employeeProvider.employeeList.length,
+                    itemBuilder: (context , index){
+                      // final data = employeeProvider.employeeList;
+                      // final data = _filteredItem;
+                      return Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+                        child: Stack(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 10.0, left: 10.0),
+                              child: Container(
+                                padding: EdgeInsets.all(10.0),
+                                decoration: roundedContainerDesign(context).copyWith(
+                                  boxShadow: boxShadowDesign(),
+                                ),
+                                child: Row(
+                                  children: [
+                                    SizedBox(width: 75.0),
+                                    Flexible(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          // Text('ID: ${docs[index]['employee_id']}'),
+                                          // kRowText('Name: ', data[index].name),
+                                          // kRowText('Mobile: ', data[index].mobile),
+                                          // kRowText('Email: ', data[index].email),
+                                          kRowText('Name: ', '${data[index]['name']}'),
+                                          kRowText('Mobile: ', '+919000456764'),
+                                          kRowText('Email: ', 'user.dits@gmail.com'),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: (){
+                                        // Navigator.push(context, MaterialPageRoute(builder: (context) => EditEmployee(
+                                        //   employeeID: '${data[index].id}',
+                                        // )));
+                                      },
+                                      icon: Icon(Icons.edit_outlined),
+                                    ),
+                                    // IconButton(
+                                    //   onPressed: (){
+                                    //     deletePopUp(context, onClickYes: (){
+                                    //
+                                    //     });
+                                    //   },
+                                    //   icon: Icon(Icons.delete_forever_outlined),
+                                    // ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Container(
+                              height: 80,
+                              width: 80,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10.0),
+                                boxShadow: boxShadowDesign(),
+                                // image: data[index].image != '' ? DecorationImage(
+                                //   image: NetworkImage(data[index].image),
+                                //   fit: BoxFit.cover,
+                                // ) :
+                                image: DecorationImage(
+                                  image: NetworkImage('${data[index]['image']}'),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ) ,
+                  //     : Center(child: Container(
+                  //   decoration: blurCurveDecor(context),
+                  //   padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
+                  //   child: Text('No User Found', style: kHeaderStyle()),
+                  // )),
+                  if(userLength < _filteredItem.length)
+                    Center(child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                      child: CircularProgressIndicator(),
+                    )),
+                  kBottomSpace(),
+                ],
+              ),
+            );
           }
-          return false;
-        },
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          child: Column(
-            children: [
-              // _filteredItem.isNotEmpty ?
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: 2,
-                // itemCount: userLength < _filteredItem.length ? userLength : _filteredItem.length,
-                // itemCount: employeeProvider.employeeList.length,
-                itemBuilder: (context , index){
-                  // final data = employeeProvider.employeeList;
-                  final data = _filteredItem;
-                  return Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-                    child: Stack(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10.0, left: 10.0),
-                          child: Container(
-                            padding: EdgeInsets.all(10.0),
-                            decoration: roundedContainerDesign(context).copyWith(
-                              boxShadow: boxShadowDesign(),
-                            ),
-                            child: Row(
-                              children: [
-                                SizedBox(width: 75.0),
-                                Flexible(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      // Text('ID: ${docs[index]['employee_id']}'),
-                                      // kRowText('Name: ', data[index].name),
-                                      // kRowText('Mobile: ', data[index].mobile),
-                                      // kRowText('Email: ', data[index].email),
-                                      kRowText('Name: ', 'User 01'),
-                                      kRowText('Mobile: ', '+919000456764'),
-                                      kRowText('Email: ', 'user.dits@gmail.com'),
-                                    ],
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: (){
-                                    // Navigator.push(context, MaterialPageRoute(builder: (context) => EditEmployee(
-                                    //   employeeID: '${data[index].id}',
-                                    // )));
-                                  },
-                                  icon: Icon(Icons.edit_outlined),
-                                ),
-                                // IconButton(
-                                //   onPressed: (){
-                                //     deletePopUp(context, onClickYes: (){
-                                //
-                                //     });
-                                //   },
-                                //   icon: Icon(Icons.delete_forever_outlined),
-                                // ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 80,
-                          width: 80,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10.0),
-                            boxShadow: boxShadowDesign(),
-                            // image: data[index].image != '' ? DecorationImage(
-                            //   image: NetworkImage(data[index].image),
-                            //   fit: BoxFit.cover,
-                            // ) :
-                            image: DecorationImage(
-                              image: AssetImage('images/img_blank_profile.png'),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ) ,
-              //     : Center(child: Container(
-              //   decoration: blurCurveDecor(context),
-              //   padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
-              //   child: Text('No User Found', style: kHeaderStyle()),
-              // )),
-              if(userLength < _filteredItem.length)
-                Center(child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10.0),
-                  child: CircularProgressIndicator(),
-                )),
-              kBottomSpace(),
-            ],
-          ),
-        ),
+          return LoadingIcon();
+        }
       ),
       // floatingActionButton: KButton(
       //   title: 'Add Employee',

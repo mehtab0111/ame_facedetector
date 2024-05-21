@@ -34,14 +34,14 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
     setState(() {
       isLoading = true;
     });
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
 
     if (pickedFile != null) {
       // await detectFaces(pickedFile.path);
       // await detectLabels(pickedFile.path);
       // compareFaces(pickedFile.path, pickedFile.path);
 
-      matchPercentage = await compareFaces(employeeImage, pickedFile.path);
+      // matchPercentage = await compareFaces(employeeImage, pickedFile.path);
       setState(() {
         _image = File(pickedFile.path);
       });
@@ -210,7 +210,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
                       isExpanded: true,
                       borderRadius: BorderRadius.circular(10.0),
                       value: employeeValue != '' ? employeeValue : null,
-                      hint: Text('Select State', style: hintTextStyle(context)),
+                      hint: Text('Select Employee', style: hintTextStyle(context)),
                       items: userList
                           .map<DropdownMenuItem>((value) {
                         return DropdownMenuItem(
@@ -259,20 +259,21 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
                 return Text(labels[index]);
               },
             ),
-            if(employeeName != '')
-            matchPercentage > 90 ?
-            Column(
-              children: [
-                Text('Match Result: $matchPercentage'),
-                Text('You are logged in'),
-              ],
-            ) : Text("Scan a proper image"),
+            // if(employeeName != '')
+            // matchPercentage > 90 ?
+            // Column(
+            //   children: [
+            //     Text('Match Result: $matchPercentage'),
+            //     Text('You are logged in'),
+            //   ],
+            // ) : Text("Scan a proper image"),
             kSpace(),
-            if(employeeName != '')
+            // if(employeeName != '')
             KButton(
               onClick: _pickImage,
               title: 'Scan Image',
             ),
+            kBottomSpace(),
           ],
         ),
       ),

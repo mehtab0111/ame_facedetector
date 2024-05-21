@@ -89,8 +89,8 @@ class LoadingIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // return Center(child: CircularProgressIndicator(color: kMainColor));
-    return Center(child: Image.asset('images/khwahish_gif.gif'));
+    return Center(child: CircularProgressIndicator(color: kMainColor));
+    // return Center(child: Image.asset('images/khwahish_gif.gif'));
   }
 }
 

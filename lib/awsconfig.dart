@@ -69,6 +69,7 @@ Future<List<String>> detectCustomLabels(String imagePath) async {
     final response = await _rekognition!.detectCustomLabels(
       projectVersionArn: projectVersionArn,
       image: image,
+      minConfidence: 45,
     );
 
     List<String> labels = [];
@@ -126,33 +127,6 @@ Future<List<String>> detectLabels(String imagePath) async {
     return [];
   }
 }
-
-// Future<List<String>> compareFaces(String sourceImagePath, String targetImagePath) async {
-//   try {
-//     print('Comparing faces...');
-//     final sourceImageBytes = await File(sourceImagePath).readAsBytes();
-//     final targetImageBytes = await File(targetImagePath).readAsBytes();
-//
-//     final sourceImage = Image(bytes: Uint8List.fromList(sourceImageBytes));
-//     final targetImage = Image(bytes: Uint8List.fromList(targetImageBytes));
-//
-//     final response = await _rekognition!.compareFaces(
-//       sourceImage: sourceImage,
-//       targetImage: targetImage,
-//     );
-//
-//     List<String> labels = [];
-//     for (var faceMatch in response.faceMatches!) {
-//       labels.add('Face at ${faceMatch}');
-//       labels.add('Similarity: ${faceMatch.similarity}');
-//     }
-//     print('Label: ${labels}');
-//     return labels;
-//   } catch (e) {
-//     print('Error comparing faces: $e');
-//     return [];
-//   }
-// }
 
 Future<double> compareFaces(String networkImageUrl, String pickedImagePath) async {
   try {

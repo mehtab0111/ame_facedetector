@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "964986095720",
-    "project_id": "facedetector-dcd00",
-    "storage_bucket": "facedetector-dcd00.appspot.com"
+    "project_number": "1025028158445",
+    "project_id": "facedetector-f9c54",
+    "storage_bucket": "facedetector-f9c54.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:964986095720:android:3b3a36eeb97e89d863d3dd",
+        "mobilesdk_app_id": "1:1025028158445:android:f1499e972dc764b64b2de4",
         "android_client_info": {
           "package_name": "com.devant.ame_facedetector"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyB2mh3vc9wxXmfe9ofSmR5VD3SFjI7INXQ"
+          "current_key": "AIzaSyCHUa7o14TxwhyoXwJthDzT2IiPHY2Id9Y"
         }
       ],
       "services": {

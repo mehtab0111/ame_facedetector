@@ -1,9 +1,15 @@
 import 'package:ame_facedetector/awsconfig.dart';
 import 'package:ame_facedetector/View/Screens/splashScreen.dart';
 import 'package:ame_facedetector/View/Theme/colors.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp().catchError((e) {
+    // isFirebaseReady = false;
+    print('Error: $e');
+  });
   initRekognition();
   runApp(const MyApp());
 }

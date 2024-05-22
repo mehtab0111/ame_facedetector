@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:ame_facedetector/Controller/location.dart';
 import 'package:ame_facedetector/View/Components/buttons.dart';
-import 'package:ame_facedetector/View/Components/kDatabase.dart';
 import 'package:ame_facedetector/View/Components/textField.dart';
+import 'package:ame_facedetector/View/Components/util.dart';
 import 'package:ame_facedetector/View/Theme/style.dart';
 import 'package:ame_facedetector/awsconfig.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -16,6 +17,7 @@ class FaceDetectionScreen extends StatefulWidget {
 
 class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
 
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   // CameraController? _controller;
   // late FaceDetector _faceDetector;
   // bool _isDetecting = false;
@@ -56,18 +58,33 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
 
   List<String> labels = [];
 
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _initializeCamera();
-  //   _faceDetector = FaceDetector(
-  //     options: FaceDetectorOptions(
-  //       enableLandmarks: true,
-  //       enableContours: true,
-  //     ),
-  //   );
+  // List<Map<String, dynamic>> _documents = [];
+  // void getEmployeeList() async {
+  //   try {
+  //     QuerySnapshot querySnapshot = await _firestore.collection('employee').get();
+  //     List<Map<String, dynamic>> docs = querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+  //
+  //     setState(() {
+  //       _documents = docs;
+  //     });
+  //     print(_documents);
+  //   } catch (e) {
+  //     print('Error getting documents: $e');
+  //   }
   // }
+
+  @override
+  void initState() {
+    super.initState();
+    // getEmployeeList();
+    // _initializeCamera();
+    // _faceDetector = FaceDetector(
+    //   options: FaceDetectorOptions(
+    //     enableLandmarks: true,
+    //     enableContours: true,
+    //   ),
+    // );
+  }
   //
   // Future<void> _initializeCamera() async {
   //   final cameras = await availableCameras();
@@ -177,6 +194,12 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
           //   },
           //   child: Text('Stop Model'),
           // ),
+          TextButton(
+            onPressed: () {
+              startProjectVersion();
+            },
+            child: Text('Start Model'),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -197,38 +220,47 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
                 ],
               ),
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-              child: Container(
-                height: 45,
-                width: MediaQuery.of(context).size.width,
-                decoration: dropTextFieldDesign(context),
-                child: DropdownButtonHideUnderline(
-                  child: ButtonTheme(
-                    alignedDropdown: true,
-                    child: DropdownButton(
-                      isExpanded: true,
-                      borderRadius: BorderRadius.circular(10.0),
-                      value: employeeValue != '' ? employeeValue : null,
-                      hint: Text('Select Employee', style: hintTextStyle(context)),
-                      items: userList
-                          .map<DropdownMenuItem>((value) {
-                        return DropdownMenuItem(
-                          value: value.userID,
-                          child: Text(value.userName),
-                        );
-                      }).toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          employeeValue = newValue;
-                          employeeImage = userList.firstWhere((user) => user.userID == newValue).image;
-                          employeeName = userList.firstWhere((user) => user.userID == newValue).userName;
-                        });
-                      },
+            StreamBuilder(
+              stream: _firestore.collection('employee').snapshots(),
+              builder: (context, snapshot) {
+                if(snapshot.hasData){
+                  var data = snapshot.data!.docs;
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                    child: Container(
+                      height: 45,
+                      width: MediaQuery.of(context).size.width,
+                      decoration: dropTextFieldDesign(context),
+                      child: DropdownButtonHideUnderline(
+                        child: ButtonTheme(
+                          alignedDropdown: true,
+                          child: DropdownButton(
+                            isExpanded: true,
+                            borderRadius: BorderRadius.circular(10.0),
+                            value: employeeValue != '' ? employeeValue : null,
+                            hint: Text('Select Employee', style: hintTextStyle(context)),
+                            items: data
+                                .map<DropdownMenuItem>((value) {
+                              return DropdownMenuItem(
+                                value: value.reference.id,
+                                child: Text(value['name']),
+                              );
+                            }).toList(),
+                            onChanged: (newValue) {
+                              setState(() {
+                                employeeValue = newValue;
+                                employeeImage = data.firstWhere((user) => user.reference.id == newValue)['image'];
+                                employeeName = data.firstWhere((user) => user.reference.id == newValue)['name'];
+                              });
+                            },
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
+                  );
+                }
+                return SizedBox.shrink();
+              }
             ),
             if (employeeName != '')
               Padding(
@@ -250,14 +282,62 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
             if(_image != null)
             Image.file(File(_image!.path), height: 200,),
 
-            ListView.builder(
-              shrinkWrap: true,
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: labels.length,
-              itemBuilder: (context, index){
-                return Text(labels[index]);
-              },
+            StreamBuilder(
+              stream: _firestore.collection('employee').snapshots(),
+              builder: (context, snapshot) {
+                if(snapshot.hasData){
+                  var data = snapshot.data!.docs;
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: labels.length > 1 ? 1 : labels.length,
+                    itemBuilder: (context, index){
+
+                      RegExp regExp = RegExp(r'Label: ([^,]+), Confidence: ([\d.]+)');
+
+                      // Finding all matches in the data string
+                      Iterable<RegExpMatch> matches = regExp.allMatches(labels[index]);
+
+                      // Extracting the label and confidence values
+                      List<Map<String, dynamic>> extractedData = matches.map((match) {
+                        return {
+                          'Label': match.group(1),
+                          'Confidence': double.parse(match.group(2)!)
+                        };
+                      }).toList();
+
+                      // Printing the extracted data
+                      extractedData.forEach((item) {
+                        print('Label: ${item['Label']}, Confidence: ${item['Confidence']}');
+                      });
+
+                      return ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: extractedData.length,
+                          itemBuilder: (context, ind) {
+                            return GestureDetector(
+                              onTap: (){
+                                print(extractedData[ind]['Label']);
+
+                                userID = data.firstWhere((user) => user['name'] == extractedData[ind]['Label']).reference.id;
+                              },
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Name: ${extractedData[ind]['Label']}'),
+                                  Text('Confidence: ${extractedData[ind]['Confidence']}'),
+                                ],
+                              ),
+                            );
+                          }
+                      );
+                    },
+                  );
+                }
+                return SizedBox.shrink();
+              }
             ),
             // if(employeeName != '')
             // matchPercentage > 90 ?
@@ -273,10 +353,31 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
               onClick: _pickImage,
               title: 'Scan Image',
             ),
+
+            KButton(
+              onClick: giveAttendance,
+              title: 'Save Attendance',
+            ),
             kBottomSpace(),
           ],
         ),
       ),
     );
+  }
+
+  String userID = '';
+  void giveAttendance() async {
+    try{
+      _firestore.collection('attendance').add({
+        'location': LocationService.userLocation,
+        'latLng': GeoPoint(LocationService.userLatitude, LocationService.userLongitude),
+        'clockIn': DateTime.now(),
+        'userID': userID,
+      });
+      toastMessage(message: 'Attendance Saved');
+      Navigator.pop(context);
+    } catch (e) {
+      print(e);
+    }
   }
 }

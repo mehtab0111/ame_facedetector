@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 // MODEL_ARN=arn:aws:rekognition:us-east-1:your_account_id:AME_faceDetection.2024-05-16T16.40.47
 
-const String projectVersionArn = 'arn:aws:rekognition:us-east-1:905418202651:project/AME_faceDetection/version/AME_faceDetection.2024-05-16T16.40.47/1715857848924';
+const String projectVersionArn = 'arn:aws:rekognition:us-east-1:905418202651:project/AME_faceDetection/version/AME_faceDetection.2024-05-22T14.07.58/1716367079664';
 
 Rekognition? _rekognition;
 
@@ -69,7 +69,7 @@ Future<List<String>> detectCustomLabels(String imagePath) async {
     final response = await _rekognition!.detectCustomLabels(
       projectVersionArn: projectVersionArn,
       image: image,
-      minConfidence: 45,
+      minConfidence: 20,
     );
 
     List<String> labels = [];

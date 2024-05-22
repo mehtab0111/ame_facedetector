@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ServiceManager {
@@ -6,8 +7,6 @@ class ServiceManager {
   static String companyNumber = '';
   static String companyAddress = '';
   static String supportEmail = '';
-  static String razorPayKey = 'rzp_live_h5nwPTx2912ZJH';
-  // static String razorPayKey = 'rzp_test_fx15BZenrqFdd1'; //test
 
   static String userID = '';
   static String profileURL = '';
@@ -20,7 +19,7 @@ class ServiceManager {
   static String aboutUS = '';
   static int cartNumber = 0;
 
-  // final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   void setUser (String userID) async {
     final prefs = await SharedPreferences.getInstance();
@@ -44,4 +43,18 @@ class ServiceManager {
   void getUserData() async {
 
   }
+
+  // void updateAll() async {
+  //   QuerySnapshot snapshot = await  _firestore.collection('employee').get();
+  //   for (QueryDocumentSnapshot document in snapshot.docs) {
+  //     try {
+  //       await _firestore.collection('employee').doc(document.id).update({
+  //         '': '',
+  //       });
+  //     } catch (e) {
+  //       print(e);
+  //     }
+  //   }
+  //   print('All documents updated successfully');
+  // }
 }

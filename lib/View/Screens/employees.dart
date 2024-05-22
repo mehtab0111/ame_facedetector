@@ -1,3 +1,4 @@
+import 'package:ame_facedetector/Controller/serviceManager.dart';
 import 'package:ame_facedetector/View/Components/textField.dart';
 import 'package:ame_facedetector/View/Components/DialogueBox/deletePopUp.dart';
 import 'package:ame_facedetector/View/Components/util.dart';
@@ -95,22 +96,30 @@ class _EmployeesState extends State<Employees> {
           hintText: 'Search',
         ) : Text('Employees'),
         actions: [
-          search != true ? IconButton(
-            onPressed: (){
-              setState(() {
-                search = !search;
-              });
-            },
-            icon: Icon(Icons.search),
-          ) : IconButton(
-            onPressed: (){
-              setState(() {
-                search = !search;
-                searchText.clear();
-              });
-            },
-            icon: Icon(Icons.close),
-          ),
+          ///for testing
+          // TextButton(
+          //   onPressed: (){
+          //     ServiceManager().updateAll();
+          //   },
+          //   child: Text('Update All'),
+          // ),
+
+          // search != true ? IconButton(
+          //   onPressed: (){
+          //     setState(() {
+          //       search = !search;
+          //     });
+          //   },
+          //   icon: Icon(Icons.search),
+          // ) : IconButton(
+          //   onPressed: (){
+          //     setState(() {
+          //       search = !search;
+          //       searchText.clear();
+          //     });
+          //   },
+          //   icon: Icon(Icons.close),
+          // ),
         ],
       ),
       body: StreamBuilder(
@@ -150,13 +159,9 @@ class _EmployeesState extends State<Employees> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          // Text('ID: ${docs[index]['employee_id']}'),
-                                          // kRowText('Name: ', data[index].name),
-                                          // kRowText('Mobile: ', data[index].mobile),
-                                          // kRowText('Email: ', data[index].email),
                                           kRowText('Name: ', '${data[index]['name']}'),
-                                          kRowText('Mobile: ', '+919000456764'),
-                                          kRowText('Email: ', 'user.dits@gmail.com'),
+                                          kRowText('Mobile: ', '${data[index]['mobile']}'),
+                                          kRowText('Email: ', '${data[index]['email']}'),
                                         ],
                                       ),
                                     ),

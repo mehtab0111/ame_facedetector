@@ -3,8 +3,8 @@ import 'package:geolocator/geolocator.dart';
 
 class LocationService {
 
-  static String pickedCity = '';
-  static String pickedCityID = '';
+  // static String pickedCity = '';
+  // static String pickedCityID = '';
   static String userLocation = '';
   static String pickAddress = '';
   static double userLatitude = 37.42796133580664;

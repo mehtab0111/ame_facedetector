@@ -83,26 +83,27 @@ class _LoginState extends State<Login> {
                           //   isLoading = true;
                           // });
                           Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
+
                         }
                       },
                     ) : LoadingButton(),
                     SizedBox(height: 20.0),
-                    RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        style: TextStyle(color: Colors.black54),
-                        children: <TextSpan>[
-                          TextSpan(text: 'Not a registered user ? '),
-                          TextSpan(
-                            text: 'Sign up',
-                            // style: linkTextStyle(),
-                            recognizer: TapGestureRecognizer()..onTap = () {
-                              // Navigator.push(context, MaterialPageRoute(builder: (context) => Registration()));
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
+                    // RichText(
+                    //   textAlign: TextAlign.center,
+                    //   text: TextSpan(
+                    //     style: TextStyle(color: Colors.black54),
+                    //     children: <TextSpan>[
+                    //       TextSpan(text: 'Not a registered user ? '),
+                    //       TextSpan(
+                    //         text: 'Sign up',
+                    //         // style: linkTextStyle(),
+                    //         recognizer: TapGestureRecognizer()..onTap = () {
+                    //           // Navigator.push(context, MaterialPageRoute(builder: (context) => Registration()));
+                    //         },
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
                   ],
                 ),
               ),

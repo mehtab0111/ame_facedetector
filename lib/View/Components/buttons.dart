@@ -18,7 +18,7 @@ class KButton extends StatelessWidget {
       color: color ?? kButtonColor,
       textColor: kBTextColor,
       onPressed: onClick,
-      child: Text(title.toUpperCase(), style: k16Style(),),
+      child: Text(title, style: k16Style(),),
     );
   }
 }

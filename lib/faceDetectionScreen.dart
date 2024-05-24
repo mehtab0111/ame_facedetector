@@ -51,6 +51,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
 
       ///label
       labels = await detectCustomLabels(_image!.path);
+      // labels = await detectPersons(_image!.path);
       print(labels);
       setState(() {});
     }
@@ -287,7 +288,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
               builder: (context, snapshot) {
                 if(snapshot.hasData){
                   var data = snapshot.data!.docs;
-                  return ListView.builder(
+                  return labels.isNotEmpty ? ListView.builder(
                     shrinkWrap: true,
                     padding: EdgeInsets.symmetric(horizontal: 10),
                     physics: NeverScrollableScrollPhysics(),
@@ -334,7 +335,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
                           }
                       );
                     },
-                  );
+                  ) : Text('Not a Proper Image Scan Again');
                 }
                 return SizedBox.shrink();
               }

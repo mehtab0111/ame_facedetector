@@ -84,6 +84,33 @@ Future<List<String>> detectCustomLabels(String imagePath) async {
   }
 }
 
+///for detecting persone
+Future<List<String>> detectPersons(String imagePath) async {
+  try {
+    final imageBytes = await File(imagePath).readAsBytes();
+    final image = Image(bytes: Uint8List.fromList(imageBytes));
+
+    final response = await _rekognition!.detectLabels(
+      image: image,
+      maxLabels: 10,
+      minConfidence: 50,
+    );
+
+    List<String> labels = [];
+    for (var label in response.labels!) {
+      if (label.name == 'Person') {
+        labels.add('Label: ${label.name}, Confidence: ${label.confidence}');
+      }
+    }
+
+    print(labels);
+    return labels;
+  } catch (e) {
+    print('Error detecting persons: $e');
+    return [];
+  }
+}
+
 ///detect faces
 Future<void> detectFaces(String imagePath) async {
   try {

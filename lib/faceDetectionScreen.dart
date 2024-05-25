@@ -36,7 +36,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
     setState(() {
       isLoading = true;
     });
-    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       // await detectFaces(pickedFile.path);
@@ -189,18 +189,18 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
         // centerTitle: true,
         title: Text('Employee Attendance'),
         actions: [
-          TextButton(
-            onPressed: () async {
-              stopProjectVersion();
-            },
-            child: Text('Stop Model'),
-          ),
-          TextButton(
-            onPressed: () {
-              startProjectVersion();
-            },
-            child: Text('Start Model'),
-          ),
+          // TextButton(
+          //   onPressed: () async {
+          //     stopProjectVersion();
+          //   },
+          //   child: Text('Stop Model'),
+          // ),
+          // TextButton(
+          //   onPressed: () {
+          //     startProjectVersion();
+          //   },
+          //   child: Text('Start Model'),
+          // ),
         ],
       ),
       body: SingleChildScrollView(

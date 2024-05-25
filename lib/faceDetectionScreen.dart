@@ -189,12 +189,12 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
         // centerTitle: true,
         title: Text('Employee Attendance'),
         actions: [
-          // TextButton(
-          //   onPressed: () async {
-          //     stopProjectVersion();
-          //   },
-          //   child: Text('Stop Model'),
-          // ),
+          TextButton(
+            onPressed: () async {
+              stopProjectVersion();
+            },
+            child: Text('Stop Model'),
+          ),
           TextButton(
             onPressed: () {
               startProjectVersion();

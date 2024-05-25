@@ -1,5 +1,8 @@
 import 'dart:io';
+import 'package:ame_facedetector/View/Components/util.dart';
 import 'package:ame_facedetector/View/Theme/style.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +21,7 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController number = TextEditingController();
   TextEditingController email = TextEditingController();
@@ -31,6 +35,40 @@ class _LoginState extends State<Login> {
   bool buttonEnabled = false;
   bool textObscure = true;
   bool isLoading = false;
+
+  Future<void> signInWithEmailAndPassword(context, {
+    required String email, required String password
+  }) async {
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
+      User? user = userCredential.user;
+
+      if (user != null) {
+        ServiceManager().setUser(user.uid);
+        ServiceManager().getUserID();
+        toastMessage(message: 'Logged In');
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(
+            builder: (context) => HomePage()), (route) => false);
+      } else {
+        toastMessage(message: 'Invalid email or password', colors: kRedColor);
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      toastMessage(message: removeSquareBrackets('$e'), colors: kRedColor);
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  String removeSquareBrackets(String input) {
+    return input.replaceAll(RegExp(r'\[.*?\]'), '');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,12 +92,12 @@ class _LoginState extends State<Login> {
                     KTextField(
                       title: 'Email',
                       controller: email,
-                      // validate: (value) {
-                      //   if (value == null || value.isEmpty || !value.contains('@') || !value.contains('.')) {
-                      //     return 'Enter a valid email address';
-                      //   }
-                      //   return null;
-                      // },
+                      validate: (value) {
+                        if (value == null || value.isEmpty || !value.contains('@') || !value.contains('.')) {
+                          return 'Enter a valid email address';
+                        }
+                        return null;
+                      },
                     ),
                     KTextField(
                       title: 'Password',
@@ -79,10 +117,16 @@ class _LoginState extends State<Login> {
                       title: 'Continue',
                       onClick: (){
                         if(_formKey.currentState!.validate()){
-                          // setState(() {
-                          //   isLoading = true;
-                          // });
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
+                          // Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
+
+                          setState(() {
+                            isLoading = true;
+                          });
+                          signInWithEmailAndPassword(
+                            context,
+                            email: email.text,
+                            password: password.text,
+                          );
 
                         }
                       },

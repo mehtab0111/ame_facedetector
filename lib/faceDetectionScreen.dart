@@ -5,10 +5,14 @@ import 'package:ame_facedetector/View/Components/textField.dart';
 import 'package:ame_facedetector/View/Components/util.dart';
 import 'package:ame_facedetector/View/Theme/style.dart';
 import 'package:ame_facedetector/awsconfig.dart';
+import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'dart:typed_data';
 
 class FaceDetectionScreen extends StatefulWidget {
   @override
@@ -18,9 +22,9 @@ class FaceDetectionScreen extends StatefulWidget {
 class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  // CameraController? _controller;
-  // late FaceDetector _faceDetector;
-  // bool _isDetecting = false;
+  CameraController? _controller;
+  late FaceDetector _faceDetector;
+  bool _isDetecting = false;
 
   // Users? selectedUser;
   String employeeValue = '';
@@ -59,131 +63,121 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
 
   List<String> labels = [];
 
-  // List<Map<String, dynamic>> _documents = [];
-  // void getEmployeeList() async {
-  //   try {
-  //     QuerySnapshot querySnapshot = await _firestore.collection('employee').get();
-  //     List<Map<String, dynamic>> docs = querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
-  //
-  //     setState(() {
-  //       _documents = docs;
-  //     });
-  //     print(_documents);
-  //   } catch (e) {
-  //     print('Error getting documents: $e');
-  //   }
-  // }
-
   @override
   void initState() {
     super.initState();
-    // getEmployeeList();
-    // _initializeCamera();
-    // _faceDetector = FaceDetector(
-    //   options: FaceDetectorOptions(
-    //     enableLandmarks: true,
-    //     enableContours: true,
-    //   ),
-    // );
+    _initializeCamera();
+    _faceDetector = GoogleMlKit.vision.faceDetector(
+      FaceDetectorOptions(
+        enableLandmarks: true,
+        enableContours: true,
+      ),
+    );
   }
-  //
-  // Future<void> _initializeCamera() async {
-  //   final cameras = await availableCameras();
-  //   final camera = cameras.first;
-  //
-  //   _controller = CameraController(camera, ResolutionPreset.medium);
-  //   await _controller?.initialize();
-  //   _startFaceDetection();
-  //   setState(() {});
-  // }
-  //
-  // void _startFaceDetection() {
-  //   _controller?.startImageStream((CameraImage image) {
-  //     if (_isDetecting) return;
-  //     _isDetecting = true;
-  //
-  //     final WriteBuffer allBytes = WriteBuffer();
-  //     for (Plane plane in image.planes) {
-  //       allBytes.putUint8List(plane.bytes);
-  //     }
-  //     final bytes = allBytes.done().buffer.asUint8List();
-  //
-  //     final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
-  //
-  //     final InputImageRotation imageRotation = _rotationIntToImageRotation(
-  //         _controller!.description.sensorOrientation);
-  //
-  //     final InputImageFormat inputImageFormat = _imageFormatFromRawValue(image.format.raw);
-  //
-  //     final planeData = image.planes.map(
-  //           (Plane plane) {
-  //         return InputImagePlaneMetadata(
-  //           bytesPerRow: plane.bytesPerRow,
-  //           height: plane.height,
-  //           width: plane.width,
-  //         );
-  //       },
-  //     ).toList();
-  //
-  //     final inputImageData = InputImageData(
-  //       size: imageSize,
-  //       imageRotation: imageRotation,
-  //       inputImageFormat: inputImageFormat,
-  //       planeData: planeData,
-  //     );
-  //
-  //     final inputImage = InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
-  //
-  //     _faceDetector.processImage(inputImage).then((faces) async {
-  //       if (faces.isNotEmpty) {
-  //         // Stop the camera
-  //         await _controller?.stopImageStream();
-  //         _captureImage();
-  //       }
-  //       _isDetecting = false;
-  //     });
-  //   });
-  // }
-  //
-  // InputImageRotation _rotationIntToImageRotation(int rotation) {
-  //   switch (rotation) {
-  //     case 90:
-  //       return InputImageRotation.rotation90deg;
-  //     case 180:
-  //       return InputImageRotation.rotation180deg;
-  //     case 270:
-  //       return InputImageRotation.rotation270deg;
-  //     default:
-  //       return InputImageRotation.rotation0deg;
-  //   }
-  // }
-  //
-  // InputImageFormat _imageFormatFromRawValue(int rawValue) {
-  //   switch (rawValue) {
-  //     case 17: // ImageFormat.NV21
-  //       return InputImageFormat.nv21;
-  //     case 35: // ImageFormat.YUV_420_888
-  //       return InputImageFormat.yuv420;
-  //     default:
-  //       return InputImageFormat.bgra8888; // default format
-  //   }
-  // }
 
-  // Future<void> _captureImage() async {
-  //   final XFile file = await _controller!.takePicture();
-  //   // Handle the captured image, e.g., save it or display it
-  //   print('Captured image: ${file.path}');
-  // }
-  //
-  // @override
-  // void dispose() {
-  //   _controller?.dispose();
-  //   _faceDetector.close();
-  //   super.dispose();
-  // }
+  Future<void> _initializeCamera() async {
+    final cameras = await availableCameras();
+    final camera = cameras.first;
+
+    _controller = CameraController(
+        camera, ResolutionPreset.medium
+    );
+    await _controller?.initialize();
+    _startFaceDetection();
+    setState(() {});
+  }
+
+  void _startFaceDetection() {
+    _controller?.startImageStream((CameraImage image) {
+      if (_isDetecting) return;
+      _isDetecting = true;
+
+      final WriteBuffer allBytes = WriteBuffer();
+      for (Plane plane in image.planes) {
+        allBytes.putUint8List(plane.bytes);
+      }
+      final bytes = allBytes.done().buffer.asUint8List();
+
+      final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
+
+      final InputImageRotation imageRotation = _rotationIntToImageRotation(
+          _controller!.description.sensorOrientation);
+
+      final InputImageFormat inputImageFormat = _imageFormatFromRawValue(image.format.raw);
+
+      final inputImageMetadata = InputImageMetadata(
+        size: imageSize,
+        rotation: imageRotation,
+        format: inputImageFormat,
+        bytesPerRow: image.planes.first.bytesPerRow,
+      );
+
+      final inputImage = InputImage.fromBytes(bytes: bytes, metadata: inputImageMetadata);
+
+      _faceDetector.processImage(inputImage).then((faces) async {
+        if (faces.isNotEmpty) {
+          // Stop the camera
+          await _controller?.stopImageStream();
+          _captureImage();
+        }
+        _isDetecting = false;
+      });
+    });
+  }
+
+  InputImageRotation _rotationIntToImageRotation(int rotation) {
+    switch (rotation) {
+      case 90:
+        return InputImageRotation.rotation90deg;
+      case 180:
+        return InputImageRotation.rotation180deg;
+      case 270:
+        return InputImageRotation.rotation270deg;
+      default:
+        return InputImageRotation.rotation0deg;
+    }
+  }
+
+  InputImageFormat _imageFormatFromRawValue(int rawValue) {
+    switch (rawValue) {
+      case 17: // ImageFormat.NV21
+        return InputImageFormat.nv21;
+      case 35: // ImageFormat.YUV_420_888
+        return InputImageFormat.yuv420;
+      default:
+        return InputImageFormat.bgra8888; // default format
+    }
+  }
+
+  XFile? file;
+  Future<void> _captureImage() async {
+    try {
+      file = await _controller!.takePicture();
+      setState(() {});
+      // Handle the captured image, e.g., save it or display it
+      print('Captured image: ${file!.path}');
+    } catch (e) {
+      print('Error capturing image: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    _faceDetector.close();
+    super.dispose();
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
+    if (_controller == null || !_controller!.value.isInitialized) {
+      return Center(child: CircularProgressIndicator());
+    }
+    // return Scaffold(
+    //   body: CameraPreview(_controller!),
+    // );
     return Scaffold(
       appBar: AppBar(
         // centerTitle: true,
@@ -203,7 +197,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
           // ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: file != null ? SingleChildScrollView(
         child: Column(
           children: <Widget>[
             Padding(
@@ -362,7 +356,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
             kBottomSpace(),
           ],
         ),
-      ),
+      ) : CameraPreview(_controller!),
     );
   }
 

@@ -25,6 +25,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
   CameraController? _controller;
   late FaceDetector _faceDetector;
   bool _isDetecting = false;
+  XFile? _capturedFile;
 
   // Users? selectedUser;
   String employeeValue = '';
@@ -149,13 +150,15 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
     }
   }
 
-  XFile? file;
   Future<void> _captureImage() async {
+    print('Start Capturing');
     try {
-      file = await _controller!.takePicture();
-      setState(() {});
+      final XFile file = await _controller!.takePicture();
+      setState(() {
+        _capturedFile = file;
+      });
       // Handle the captured image, e.g., save it or display it
-      print('Captured image: ${file!.path}');
+      print('Captured image: ${file.path}');
     } catch (e) {
       print('Error capturing image: $e');
     }
@@ -197,7 +200,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
           // ),
         ],
       ),
-      body: file != null ? SingleChildScrollView(
+      body: _capturedFile != null ? SingleChildScrollView(
         child: Column(
           children: <Widget>[
             Padding(

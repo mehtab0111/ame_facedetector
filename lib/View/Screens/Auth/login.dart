@@ -1,10 +1,6 @@
-import 'dart:io';
 import 'package:ame_facedetector/View/Components/util.dart';
 import 'package:ame_facedetector/View/Theme/style.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:ame_facedetector/Controller/serviceManager.dart';
 import 'package:ame_facedetector/View/Components/textField.dart';

@@ -1,17 +1,23 @@
+import 'package:ame_facedetector/Controller/cameraScreen.dart';
 import 'package:ame_facedetector/awsconfig.dart';
 import 'package:ame_facedetector/View/Screens/splashScreen.dart';
 import 'package:ame_facedetector/View/Theme/colors.dart';
+import 'package:camera/camera.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp().catchError((e) {
-    // isFirebaseReady = false;
-    print('Error: $e');
-  });
+
+  // // Ensure that plugin services are initialized so that `availableCameras()`
+  // // can be called before `runApp()`
+  // final cameras = await availableCameras();
+  // final firstCamera = cameras.first;
+
+  await Firebase.initializeApp();
   initRekognition();
   runApp(const MyApp());
+  // runApp(MyApp(camera: firstCamera));
 }
 
 class MyApp extends StatelessWidget {
@@ -27,6 +33,7 @@ class MyApp extends StatelessWidget {
       darkTheme: Constants.darkTheme,
       themeMode: ThemeMode.system,
       home: SplashScreen(),
+      // home: CameraScreen(camera: camera),
     );
   }
 }

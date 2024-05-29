@@ -42,7 +42,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
     setState(() {
       isLoading = true;
     });
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
 
     if (pickedFile != null) {
       // await detectFaces(pickedFile.path);

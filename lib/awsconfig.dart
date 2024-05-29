@@ -69,7 +69,7 @@ Future<List<String>> detectCustomLabels(String imagePath) async {
     final response = await _rekognition!.detectCustomLabels(
       projectVersionArn: projectVersionArn,
       image: image,
-      minConfidence: 20,
+      minConfidence: 0,
     );
 
     List<String> labels = [];

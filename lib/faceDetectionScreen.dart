@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:ame_facedetector/Controller/location.dart';
+import 'package:ame_facedetector/S3Service.dart';
 import 'package:ame_facedetector/View/Components/buttons.dart';
 import 'package:ame_facedetector/View/Components/textField.dart';
 import 'package:ame_facedetector/View/Components/util.dart';
@@ -48,7 +49,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
       // await detectLabels(pickedFile.path);
       // compareFaces(pickedFile.path, pickedFile.path);
 
-      // matchPercentage = await compareFaces(employeeImage, pickedFile.path);
+      matchPercentage = await compareFaces(employeeImage, pickedFile.path);
       setState(() {
         _image = File(pickedFile.path);
       });
@@ -67,13 +68,39 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
-    _faceDetector = GoogleMlKit.vision.faceDetector(
-      FaceDetectorOptions(
-        enableLandmarks: true,
-        enableContours: true,
-      ),
-    );
+    initRekognition();
+    // _initializeCamera();
+    // _faceDetector = GoogleMlKit.vision.faceDetector(
+    //   FaceDetectorOptions(
+    //     enableLandmarks: true,
+    //     enableContours: true,
+    //   ),
+    // );
+    _fetchImages();
+  }
+
+  final S3Service _s3Service = S3Service(
+    accessKey: 'AKIA5FTZBLYNSHY4Q54R',
+    secretKey: '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',
+    region: 'us-east-1',
+    bucketName: 'custom-labels-console-us-east-1-a117202c7f',
+  );
+
+  void _fetchImages() async {
+    try {
+      final images = await _s3Service.listImages();
+      print('Images: $images');
+      setState(() {
+        // _images = images;
+        // _isLoading = false;
+      });
+    } catch (e) {
+      print(e);
+      setState(() {
+        // _error = 'Error: $e';
+        // _isLoading = false;
+      });
+    }
   }
 
   Future<void> _initializeCamera() async {
@@ -175,9 +202,9 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_controller == null || !_controller!.value.isInitialized) {
-      return Center(child: CircularProgressIndicator());
-    }
+    // if (_controller == null || !_controller!.value.isInitialized) {
+    //   return Center(child: CircularProgressIndicator());
+    // }
     // return Scaffold(
     //   body: CameraPreview(_controller!),
     // );
@@ -200,7 +227,8 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
           // ),
         ],
       ),
-      body: _capturedFile != null ? SingleChildScrollView(
+      // body: _capturedFile != null ? SingleChildScrollView(
+      body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
             Padding(
@@ -289,7 +317,8 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
                     shrinkWrap: true,
                     padding: EdgeInsets.symmetric(horizontal: 10),
                     physics: NeverScrollableScrollPhysics(),
-                    itemCount: labels.length > 1 ? 1 : labels.length,
+                    // itemCount: labels.length > 1 ? 1 : labels.length,
+                    itemCount: labels.length,
                     itemBuilder: (context, index){
 
                       RegExp regExp = RegExp(r'Label: ([^,]+), Confidence: ([\d.]+)');
@@ -338,13 +367,13 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
               }
             ),
             // if(employeeName != '')
-            // matchPercentage > 90 ?
-            // Column(
-            //   children: [
-            //     Text('Match Result: $matchPercentage'),
-            //     Text('You are logged in'),
-            //   ],
-            // ) : Text("Scan a proper image"),
+            matchPercentage > 90 ?
+            Column(
+              children: [
+                Text('Match Result: $matchPercentage'),
+                Text('You are logged in'),
+              ],
+            ) : Text("Scan a proper image"),
             kSpace(),
             // if(employeeName != '')
             KButton(
@@ -359,7 +388,8 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
             kBottomSpace(),
           ],
         ),
-      ) : CameraPreview(_controller!),
+      ),
+      // ) : CameraPreview(_controller!),
     );
   }
 

@@ -26,10 +26,6 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
   bool _isDetecting = false;
   XFile? _capturedFile;
 
-  // Users? selectedUser;
-  String employeeValue = '';
-  String employeeImage = '';
-  String employeeName = '';
   bool isLoading = false;
 
   final ImagePicker _picker = ImagePicker();
@@ -43,10 +39,6 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
 
     if (pickedFile != null) {
-      // await detectFaces(pickedFile.path);
-      // await detectLabels(pickedFile.path);
-      // compareFaces(pickedFile.path, pickedFile.path);
-
       // matchPercentage = await compareFaces(employeeImage, pickedFile.path);
       // setState(() {
       //   _image = File(pickedFile.path);
@@ -287,64 +279,6 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
                 ),
               ),
             ),
-            // StreamBuilder(
-            //   stream: _firestore.collection('employee').snapshots(),
-            //   builder: (context, snapshot) {
-            //     if(snapshot.hasData){
-            //       var data = snapshot.data!.docs;
-            //       return Padding(
-            //         padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-            //         child: Container(
-            //           height: 45,
-            //           width: MediaQuery.of(context).size.width,
-            //           decoration: dropTextFieldDesign(context),
-            //           child: DropdownButtonHideUnderline(
-            //             child: ButtonTheme(
-            //               alignedDropdown: true,
-            //               child: DropdownButton(
-            //                 isExpanded: true,
-            //                 borderRadius: BorderRadius.circular(10.0),
-            //                 value: employeeValue != '' ? employeeValue : null,
-            //                 hint: Text('Select Employee', style: hintTextStyle(context)),
-            //                 items: data
-            //                     .map<DropdownMenuItem>((value) {
-            //                   return DropdownMenuItem(
-            //                     value: value.reference.id,
-            //                     child: Text(value['name']),
-            //                   );
-            //                 }).toList(),
-            //                 onChanged: (newValue) {
-            //                   setState(() {
-            //                     employeeValue = newValue;
-            //                     employeeImage = data.firstWhere((user) => user.reference.id == newValue)['image'];
-            //                     employeeName = data.firstWhere((user) => user.reference.id == newValue)['name'];
-            //                   });
-            //                 },
-            //               ),
-            //             ),
-            //           ),
-            //         ),
-            //       );
-            //     }
-            //     return SizedBox.shrink();
-            //   }
-            // ),
-            if (employeeName != '')
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  children: [
-                    Image.network(
-                      employeeImage,
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                    ),
-                    SizedBox(width: 10),
-                    Text(employeeName),
-                  ],
-                ),
-              ),
             kSpace(),
 
             if(isLoading != false)

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ServiceManager {
@@ -57,4 +58,20 @@ class ServiceManager {
   //   }
   //   print('All documents updated successfully');
   // }
+
+  Future<String> uploadImage(String imagePath, String folderName) async {
+    try{
+      final FirebaseStorage storage = FirebaseStorage.instance;
+      final Reference storageRef = storage.ref().child(folderName);
+      final String imageName = DateTime.now().millisecondsSinceEpoch.toString();
+      final Reference imageRef = storageRef.child(imageName);
+      final UploadTask uploadTask = imageRef.putFile(File(imagePath));
+      final TaskSnapshot storageSnapshot = await uploadTask.whenComplete(() {});
+      final String downloadUrl = await storageSnapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e){
+      print('Error uploading image: $e');
+    }
+    return '';
+  }
 }

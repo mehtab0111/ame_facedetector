@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:ame_facedetector/Controller/location.dart';
-import 'package:ame_facedetector/S3Service.dart';
 import 'package:ame_facedetector/View/Components/buttons.dart';
 import 'package:ame_facedetector/View/Components/textField.dart';
 import 'package:ame_facedetector/View/Components/util.dart';
@@ -13,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'dart:typed_data';
 
 class FaceDetectionScreen extends StatefulWidget {
   @override
@@ -49,26 +47,80 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
       // await detectLabels(pickedFile.path);
       // compareFaces(pickedFile.path, pickedFile.path);
 
-      matchPercentage = await compareFaces(employeeImage, pickedFile.path);
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-      isLoading = false;
+      // matchPercentage = await compareFaces(employeeImage, pickedFile.path);
+      // setState(() {
+      //   _image = File(pickedFile.path);
+      // });
+      // isLoading = false;
+      //
+      // ///label
+      // labels = await detectCustomLabels(_image!.path);
+      // // labels = await detectPersons(_image!.path);
+      // print(labels);
+      // setState(() {});
 
-      ///label
-      labels = await detectCustomLabels(_image!.path);
-      // labels = await detectPersons(_image!.path);
-      print(labels);
-      setState(() {});
+      ///new
+      compareImages(pickedFile).whenComplete((){
+        setState(() {
+          isLoading = false;
+        });
+      });
     }
   }
+
+  Map<String, dynamic> matchedData = {};
+  Future<void> compareImages(pickedFile) async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('employee').get();
+      List<String> imageUrls = [];
+      double matchPercentage = 0.0;
+      String matchedImageUrl = '';
+
+      // Collect all image URLs from the documents
+      for (QueryDocumentSnapshot document in snapshot.docs) {
+        Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+        if (data.containsKey('image') && data['image'] is String) {
+          imageUrls.add(data['image']);
+        }
+      }
+
+      // Compare faces and find the match
+      for (var image in imageUrls) {
+        matchPercentage = await compareFaces(image, pickedFile.path);
+        if (matchPercentage > 90) {
+          matchedImageUrl = image;
+          // Find the matching document data
+          for (QueryDocumentSnapshot document in snapshot.docs) {
+            Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+            if (data['image'] == matchedImageUrl) {
+              matchedData = data;
+              giveAttendance(document.reference.id);
+              break; // Exit the inner loop once the match is found
+            }
+          }
+          break; // Exit the outer loop once the match is found
+        }
+      }
+
+      if (matchedData != null) {
+        // Store the matched document data or perform any further actions
+        print('Matched image URL: $matchedImageUrl with percentage: $matchPercentage');
+        print('Matched document data: $matchedData');
+        // You can store this data in Firestore or any other storage
+      }
+
+    } catch (e) {
+      print('Error fetching images: $e');
+    }
+  }
+
+
 
   List<String> labels = [];
 
   @override
   void initState() {
     super.initState();
-    initRekognition();
     // _initializeCamera();
     // _faceDetector = GoogleMlKit.vision.faceDetector(
     //   FaceDetectorOptions(
@@ -76,31 +128,6 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
     //     enableContours: true,
     //   ),
     // );
-    _fetchImages();
-  }
-
-  final S3Service _s3Service = S3Service(
-    accessKey: 'AKIA5FTZBLYNSHY4Q54R',
-    secretKey: '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',
-    region: 'us-east-1',
-    bucketName: 'custom-labels-console-us-east-1-a117202c7f',
-  );
-
-  void _fetchImages() async {
-    try {
-      final images = await _s3Service.listImages();
-      print('Images: $images');
-      setState(() {
-        // _images = images;
-        // _isLoading = false;
-      });
-    } catch (e) {
-      print(e);
-      setState(() {
-        // _error = 'Error: $e';
-        // _isLoading = false;
-      });
-    }
   }
 
   Future<void> _initializeCamera() async {
@@ -246,48 +273,62 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
                 ],
               ),
             ),
-            StreamBuilder(
-              stream: _firestore.collection('employee').snapshots(),
-              builder: (context, snapshot) {
-                if(snapshot.hasData){
-                  var data = snapshot.data!.docs;
-                  return Padding(
-                    padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-                    child: Container(
-                      height: 45,
-                      width: MediaQuery.of(context).size.width,
-                      decoration: dropTextFieldDesign(context),
-                      child: DropdownButtonHideUnderline(
-                        child: ButtonTheme(
-                          alignedDropdown: true,
-                          child: DropdownButton(
-                            isExpanded: true,
-                            borderRadius: BorderRadius.circular(10.0),
-                            value: employeeValue != '' ? employeeValue : null,
-                            hint: Text('Select Employee', style: hintTextStyle(context)),
-                            items: data
-                                .map<DropdownMenuItem>((value) {
-                              return DropdownMenuItem(
-                                value: value.reference.id,
-                                child: Text(value['name']),
-                              );
-                            }).toList(),
-                            onChanged: (newValue) {
-                              setState(() {
-                                employeeValue = newValue;
-                                employeeImage = data.firstWhere((user) => user.reference.id == newValue)['image'];
-                                employeeName = data.firstWhere((user) => user.reference.id == newValue)['name'];
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }
-                return SizedBox.shrink();
-              }
+
+            if(matchedData['name'] != null)
+            Text('${matchedData['name']}'),
+            if(matchedData['image'] != null)
+            Container(
+              height: 80,
+              width: 80,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: NetworkImage(matchedData['image']),
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
+            // StreamBuilder(
+            //   stream: _firestore.collection('employee').snapshots(),
+            //   builder: (context, snapshot) {
+            //     if(snapshot.hasData){
+            //       var data = snapshot.data!.docs;
+            //       return Padding(
+            //         padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+            //         child: Container(
+            //           height: 45,
+            //           width: MediaQuery.of(context).size.width,
+            //           decoration: dropTextFieldDesign(context),
+            //           child: DropdownButtonHideUnderline(
+            //             child: ButtonTheme(
+            //               alignedDropdown: true,
+            //               child: DropdownButton(
+            //                 isExpanded: true,
+            //                 borderRadius: BorderRadius.circular(10.0),
+            //                 value: employeeValue != '' ? employeeValue : null,
+            //                 hint: Text('Select Employee', style: hintTextStyle(context)),
+            //                 items: data
+            //                     .map<DropdownMenuItem>((value) {
+            //                   return DropdownMenuItem(
+            //                     value: value.reference.id,
+            //                     child: Text(value['name']),
+            //                   );
+            //                 }).toList(),
+            //                 onChanged: (newValue) {
+            //                   setState(() {
+            //                     employeeValue = newValue;
+            //                     employeeImage = data.firstWhere((user) => user.reference.id == newValue)['image'];
+            //                     employeeName = data.firstWhere((user) => user.reference.id == newValue)['name'];
+            //                   });
+            //                 },
+            //               ),
+            //             ),
+            //           ),
+            //         ),
+            //       );
+            //     }
+            //     return SizedBox.shrink();
+            //   }
+            // ),
             if (employeeName != '')
               Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -305,75 +346,93 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
                 ),
               ),
             kSpace(),
+
+            if(isLoading != false)
+            Container(
+              width: MediaQuery.of(context).size.width*0.8,
+              padding: EdgeInsets.all(10),
+              decoration: roundedShadedDesign(context),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Text('Detecting face'),
+                  SizedBox(width: 10),
+                  CircularProgressIndicator(),
+                ],
+              ),
+            ),
+            if(matchedData == {})
+            Text('Scan a proper Image'),
+
             if(_image != null)
             Image.file(File(_image!.path), height: 200,),
 
-            StreamBuilder(
-              stream: _firestore.collection('employee').snapshots(),
-              builder: (context, snapshot) {
-                if(snapshot.hasData){
-                  var data = snapshot.data!.docs;
-                  return labels.isNotEmpty ? ListView.builder(
-                    shrinkWrap: true,
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    physics: NeverScrollableScrollPhysics(),
-                    // itemCount: labels.length > 1 ? 1 : labels.length,
-                    itemCount: labels.length,
-                    itemBuilder: (context, index){
-
-                      RegExp regExp = RegExp(r'Label: ([^,]+), Confidence: ([\d.]+)');
-
-                      // Finding all matches in the data string
-                      Iterable<RegExpMatch> matches = regExp.allMatches(labels[index]);
-
-                      // Extracting the label and confidence values
-                      List<Map<String, dynamic>> extractedData = matches.map((match) {
-                        return {
-                          'Label': match.group(1),
-                          'Confidence': double.parse(match.group(2)!)
-                        };
-                      }).toList();
-
-                      // Printing the extracted data
-                      extractedData.forEach((item) {
-                        print('Label: ${item['Label']}, Confidence: ${item['Confidence']}');
-                      });
-
-                      return ListView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemCount: extractedData.length,
-                          itemBuilder: (context, ind) {
-                            return GestureDetector(
-                              onTap: (){
-                                print(extractedData[ind]['Label']);
-
-                                userID = data.firstWhere((user) => user['name'] == extractedData[ind]['Label']).reference.id;
-                              },
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Name: ${extractedData[ind]['Label']}'),
-                                  Text('Confidence: ${extractedData[ind]['Confidence']}'),
-                                ],
-                              ),
-                            );
-                          }
-                      );
-                    },
-                  ) : Text('Not a Proper Image Scan Again');
-                }
-                return SizedBox.shrink();
-              }
-            ),
+            // StreamBuilder(
+            //   stream: _firestore.collection('employee').snapshots(),
+            //   builder: (context, snapshot) {
+            //     if(snapshot.hasData){
+            //       var data = snapshot.data!.docs;
+            //       return labels.isNotEmpty ? ListView.builder(
+            //         shrinkWrap: true,
+            //         padding: EdgeInsets.symmetric(horizontal: 10),
+            //         physics: NeverScrollableScrollPhysics(),
+            //         // itemCount: labels.length > 1 ? 1 : labels.length,
+            //         itemCount: labels.length,
+            //         itemBuilder: (context, index){
+            //
+            //           RegExp regExp = RegExp(r'Label: ([^,]+), Confidence: ([\d.]+)');
+            //
+            //           // Finding all matches in the data string
+            //           Iterable<RegExpMatch> matches = regExp.allMatches(labels[index]);
+            //
+            //           // Extracting the label and confidence values
+            //           List<Map<String, dynamic>> extractedData = matches.map((match) {
+            //             return {
+            //               'Label': match.group(1),
+            //               'Confidence': double.parse(match.group(2)!)
+            //             };
+            //           }).toList();
+            //
+            //           // Printing the extracted data
+            //           extractedData.forEach((item) {
+            //             print('Label: ${item['Label']}, Confidence: ${item['Confidence']}');
+            //           });
+            //
+            //           return ListView.builder(
+            //               shrinkWrap: true,
+            //               physics: NeverScrollableScrollPhysics(),
+            //               itemCount: extractedData.length,
+            //               itemBuilder: (context, ind) {
+            //                 return GestureDetector(
+            //                   onTap: (){
+            //                     print(extractedData[ind]['Label']);
+            //
+            //                     // userID = data.firstWhere((user) => user['name'] == extractedData[ind]['Label']).reference.id;
+            //                   },
+            //                   child: Column(
+            //                     crossAxisAlignment: CrossAxisAlignment.start,
+            //                     children: [
+            //                       Text('Name: ${extractedData[ind]['Label']}'),
+            //                       Text('Confidence: ${extractedData[ind]['Confidence']}'),
+            //                     ],
+            //                   ),
+            //                 );
+            //               }
+            //           );
+            //         },
+            //       ) : Text('Not a Proper Image Scan Again');
+            //     }
+            //     return SizedBox.shrink();
+            //   }
+            // ),
             // if(employeeName != '')
-            matchPercentage > 90 ?
-            Column(
-              children: [
-                Text('Match Result: $matchPercentage'),
-                Text('You are logged in'),
-              ],
-            ) : Text("Scan a proper image"),
+            // matchPercentage > 90 ?
+            // Column(
+            //   children: [
+            //     Text('Match Result: $matchPercentage'),
+            //     Text('You are logged in'),
+            //   ],
+            // ) : Text("Scan a proper image"),
             kSpace(),
             // if(employeeName != '')
             KButton(
@@ -381,10 +440,10 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
               title: 'Scan Image',
             ),
 
-            KButton(
-              onClick: giveAttendance,
-              title: 'Save Attendance',
-            ),
+            // KButton(
+            //   onClick: giveAttendance,
+            //   title: 'Save Attendance',
+            // ),
             kBottomSpace(),
           ],
         ),
@@ -393,8 +452,8 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
     );
   }
 
-  String userID = '';
-  void giveAttendance() async {
+  // String userID = '';
+  void giveAttendance(String userID) async {
     try{
       _firestore.collection('attendance').add({
         'location': LocationService.userLocation,

@@ -1,9 +1,13 @@
 import 'dart:io';
 
+import 'package:ame_facedetector/Controller/serviceManager.dart';
+import 'package:ame_facedetector/View/Components/DialogueBox/imagePickerPopUp.dart';
 import 'package:ame_facedetector/View/Components/buttons.dart';
 import 'package:ame_facedetector/View/Components/textField.dart';
-import 'package:aws_rekognition_api/rekognition-2016-06-27.dart';
-import 'package:aws_s3_api/s3-2006-03-01.dart';
+import 'package:ame_facedetector/View/Components/util.dart';
+import 'package:ame_facedetector/View/Theme/colors.dart';
+import 'package:ame_facedetector/View/Theme/style.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -17,64 +21,34 @@ class AddEmployee extends StatefulWidget {
 
 class _AddEmployeeState extends State<AddEmployee> {
 
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  TextEditingController employeeCode = TextEditingController();
   TextEditingController employeeName = TextEditingController();
-  TextEditingController cardNumber = TextEditingController();
-  TextEditingController serialNumber = TextEditingController();
-  TextEditingController userName = TextEditingController();
-  TextEditingController userPassword = TextEditingController();
-  TextEditingController commandID = TextEditingController();
+  TextEditingController mobile = TextEditingController();
+  TextEditingController email = TextEditingController();
+  // TextEditingController cardNumber = TextEditingController();
+  // TextEditingController serialNumber = TextEditingController();
+  // TextEditingController userName = TextEditingController();
+  // TextEditingController userPassword = TextEditingController();
+  // TextEditingController commandID = TextEditingController();
 
+  bool isLoading = false;
 
-  // File? _image;
-  // final picker = ImagePicker();
-  // final _s3Client = S3(region: 'your-region', credentials: AwsClientCredentials(accessKey: 'your-access-key', secretKey: 'your-secret-key'));
-  // final _rekognitionClient = Rekognition(region: 'your-region', credentials: AwsClientCredentials(accessKey: 'your-access-key', secretKey: 'your-secret-key'));
-  //
-  // Future getImage() async {
-  //   final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-  //
-  //   setState(() {
-  //     if (pickedFile != null) {
-  //       _image = File(pickedFile.path);
-  //     } else {
-  //       print('No image selected.');
-  //     }
-  //   });
-  // }
-  //
-  // Future<void> uploadImageToS3(File image) async {
-  //   final bucketName = 'your-bucket-name';
-  //   final key = 'your-image-key.jpg';
-  //
-  //   try {
-  //     final bytes = await image.readAsBytes();
-  //     await _s3Client.putObject(
-  //       bucket: bucketName,
-  //       key: key,
-  //       body: bytes,
-  //       contentLength: bytes.length,
-  //     );
-  //     print('Upload successful');
-  //   } catch (e) {
-  //     print('Upload failed: $e');
-  //   }
-  // }
-  //
-  // Future<void> detectLabels(String bucket, String key) async {
-  //   try {
-  //     final result = await _rekognitionClient.detectLabels(
-  //       image: rekognition.Image(s3Object: rekognition.S3Object(bucket: bucket, name: key)),
-  //     );
-  //
-  //     result.labels!.forEach((label) {
-  //       print('${label.name}: ${label.confidence}');
-  //     });
-  //   } catch (e) {
-  //     print('Label detection failed: $e');
-  //   }
-  // }
+  final ImagePicker _picker = ImagePicker();
+  File? _image;
+  void pickImageFromGallery() async {
+    var pickedImage = await _picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      _image = File(pickedImage!.path);
+    });
+  }
+
+  void pickImageFromCamera() async {
+    var pickedImage = await _picker.pickImage(source: ImageSource.camera);
+    setState(() {
+      _image = File(pickedImage!.path);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,43 +62,96 @@ class _AddEmployeeState extends State<AddEmployee> {
           key: _formKey,
           child: Column(
             children: [
-              SizedBox(height: 5),
-              KTextField(
-                title: 'Employee Code',
-                controller: employeeCode,
+              kSpace(),
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 75,
+                    backgroundColor:Theme.of(context).scaffoldBackgroundColor != Colors.black ?
+                    Colors.white : kDarkColor,
+                    child: _image != null ? CircleAvatar(
+                      radius: 70,
+                      backgroundImage: FileImage(File(_image!.path)),
+                    ) : CircleAvatar(
+                      radius: 70,
+                      backgroundImage: AssetImage('images/img_blank_profile.png'),
+                    ),
+                  ),
+                  Positioned(
+                    right: 0.0,
+                    bottom: 0.0,
+                    child: CircleAvatar(
+                      backgroundColor: Colors.black.withOpacity(0.6),
+                      radius: 20,
+                      child: IconButton(
+                        icon: Icon(Icons.edit_outlined),
+                        color: Colors.white,
+                        onPressed: (){
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (BuildContext context){
+                              return ImagePickerPopUp(
+                                onCameraClick: (){
+                                  Navigator.pop(context);
+                                  pickImageFromCamera();
+                                },
+                                onGalleryClick: (){
+                                  Navigator.pop(context);
+                                  pickImageFromGallery();
+                                },
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              kSpace(),
+              SizedBox(height: 5),
+              // KTextField(
+              //   title: 'Employee Code',
+              //   controller: employeeCode,
+              // ),
               KTextField(
                 title: 'Employee Name',
                 controller: employeeName,
               ),
               KTextField(
-                title: 'Card Number',
-                controller: cardNumber,
+                title: 'Employee Mobile',
+                controller: mobile,
+                textInputType: TextInputType.number,
+                textLimit: 10,
               ),
               KTextField(
-                title: 'Serial Number',
-                controller: serialNumber,
+                title: 'Employee Email',
+                controller: email,
+                textInputType: TextInputType.emailAddress,
+                validate: (value) {
+                  if (value == null || value.isEmpty || !value.contains('@') || !value.contains('.')) {
+                    return 'Enter a valid email address';
+                  }
+                  return null;
+                },
               ),
-              KTextField(
-                title: 'User Name',
-                controller: userName,
-              ),
-              KTextField(
-                title: 'User Password',
-                controller: userPassword,
-              ),
-              KTextField(
-                title: 'Command Id',
-                controller: commandID,
-              ),
-              KButton(
+              isLoading != true ? KButton(
                 title: 'Save',
                 onClick: (){
                   if(_formKey.currentState!.validate()){
-                    addEmployeeData();
+                    if(_image != null){
+                      setState(() {
+                        isLoading = true;
+                      });
+                      addEmployeeData(context);
+                    } else {
+                      toastMessage(message: 'Upload Image');
+                    }
+
                   }
                 },
-              ),
+              ) : LoadingButton(),
+              kBottomSpace(),
             ],
           ),
         ),
@@ -132,16 +159,25 @@ class _AddEmployeeState extends State<AddEmployee> {
     );
   }
 
-  Future<String> addEmployeeData() async {
-    String url = 'http://192.168.1.140/iclock/WebAPIService.asmx?op=AddEmployee';
-    var response = await http.post(Uri.parse(url), body: {
+  Future<String> addEmployeeData(context) async {
+    try{
+      String imagePath = await ServiceManager().uploadImage(_image!.path, 'employee');
 
-    });
-    if(response.statusCode == 200){
-      print(response.body);
-    } else {
-      print(response.body);
+      _firestore.collection('employee').add({
+        'email': email.text,
+        'image': imagePath,
+        'mobile': mobile.text,
+        'name': employeeName.text,
+        'createdAt': DateTime.now(),
+      });
+    } catch (e){
+      print(e);
+      setState(() {
+        isLoading = false;
+      });
     }
+    toastMessage(message: 'Employee Added');
+    Navigator.pop(context);
     return 'Success';
   }
 }

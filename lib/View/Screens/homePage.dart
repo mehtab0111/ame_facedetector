@@ -1,5 +1,6 @@
 import 'package:ame_facedetector/Controller/location.dart';
 import 'package:ame_facedetector/View/Components/buttons.dart';
+import 'package:ame_facedetector/View/Screens/attendance.dart';
 import 'package:ame_facedetector/faceDetectionScreen.dart';
 import 'package:ame_facedetector/View/Screens/addEmployee.dart';
 import 'package:ame_facedetector/View/Screens/employees.dart';
@@ -47,6 +48,9 @@ class _HomePageState extends State<HomePage> {
             }),
             profileButton(Icons.person_add_outlined, 'Add Employee', () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => AddEmployee()));
+            }),
+            profileButton(Icons.person_add_outlined, 'Attendance', () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => Attendance()));
             }),
             profileButton(Icons.gavel_outlined, 'Command Status', () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => CommandStatus()));

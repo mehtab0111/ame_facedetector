@@ -25,6 +25,9 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
   late FaceDetector _faceDetector;
   bool _isDetecting = false;
   XFile? _capturedFile;
+  late List<CameraDescription> _cameras;
+  bool _isFrontCamera = false;
+  bool _isCameraInitialized = false;
 
   bool isLoading = false;
 
@@ -113,25 +116,46 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
   @override
   void initState() {
     super.initState();
-    // _initializeCamera();
-    // _faceDetector = GoogleMlKit.vision.faceDetector(
-    //   FaceDetectorOptions(
-    //     enableLandmarks: true,
-    //     enableContours: true,
-    //   ),
-    // );
+    _initializeCamera();
+    _faceDetector = GoogleMlKit.vision.faceDetector(
+      FaceDetectorOptions(
+        enableLandmarks: true,
+        enableContours: true,
+      ),
+    );
   }
 
-  Future<void> _initializeCamera() async {
-    final cameras = await availableCameras();
-    final camera = cameras.first;
+  Future<void> _initializeCamera([CameraDescription? cameraDescription]) async {
+    try {
+      _cameras = await availableCameras();
+      final camera = cameraDescription ?? _cameras.first;
 
-    _controller = CameraController(
-        camera, ResolutionPreset.medium
-    );
-    await _controller?.initialize();
-    _startFaceDetection();
-    setState(() {});
+      _controller = CameraController(camera, ResolutionPreset.ultraHigh, enableAudio: false);
+      await _controller?.initialize();
+      if (!mounted) return;
+
+      setState(() {
+        _isCameraInitialized = true;
+      });
+      _startFaceDetection();
+    } catch (e) {
+      print('Error initializing camera: $e');
+      setState(() {
+        _isCameraInitialized = false;
+      });
+    }
+  }
+
+  void _flipCamera() async {
+    if (_cameras.length > 1) {
+      _isFrontCamera = !_isFrontCamera;
+      final camera = _isFrontCamera ? _cameras.last : _cameras.first;
+      await _controller?.dispose();
+      setState(() {
+        _isCameraInitialized = false;
+      });
+      _initializeCamera(camera);
+    }
   }
 
   void _startFaceDetection() {
@@ -146,10 +170,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
       final bytes = allBytes.done().buffer.asUint8List();
 
       final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
-
-      final InputImageRotation imageRotation = _rotationIntToImageRotation(
-          _controller!.description.sensorOrientation);
-
+      final InputImageRotation imageRotation = _rotationIntToImageRotation(_controller!.description.sensorOrientation);
       final InputImageFormat inputImageFormat = _imageFormatFromRawValue(image.format.raw);
 
       final inputImageMetadata = InputImageMetadata(
@@ -168,6 +189,9 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
           _captureImage();
         }
         _isDetecting = false;
+      }).catchError((e) {
+        _isDetecting = false;
+        print('Error processing image: $e');
       });
     });
   }
@@ -205,6 +229,16 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
       });
       // Handle the captured image, e.g., save it or display it
       print('Captured image: ${file.path}');
+
+      setState(() {
+        isLoading = true;
+      });
+      compareImages(_capturedFile).whenComplete((){
+        setState(() {
+          isLoading = false;
+        });
+      });
+
     } catch (e) {
       print('Error capturing image: $e');
     }
@@ -221,11 +255,26 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // if (_controller == null || !_controller!.value.isInitialized) {
-    //   return Center(child: CircularProgressIndicator());
-    // }
     // return Scaffold(
-    //   body: CameraPreview(_controller!),
+    //   body: !_isCameraInitialized ? Center(child: CircularProgressIndicator()) : Stack(
+    //     children: [
+    //       CameraPreview(_controller!),
+    //       if (_capturedFile != null)
+    //         Positioned(
+    //           bottom: 20,
+    //           right: 20,
+    //           child: Image.file(File(_capturedFile!.path), width: 100, height: 100),
+    //         ),
+    //       Positioned(
+    //         top: 50,
+    //         right: 20,
+    //         child: FloatingActionButton(
+    //           onPressed: _flipCamera,
+    //           child: Icon(Icons.flip_camera_ios),
+    //         ),
+    //       ),
+    //     ],
+    //   ),
     // );
     return Scaffold(
       appBar: AppBar(
@@ -246,23 +295,25 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
           // ),
         ],
       ),
-      // body: _capturedFile != null ? SingleChildScrollView(
-      body: SingleChildScrollView(
+      body: !_isCameraInitialized ? Center(child: CircularProgressIndicator()) : _capturedFile != null ? SingleChildScrollView(
+      // body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Location', style: k14BoldStyle()),
-                  Text(LocationService.userLocation),
-                  Text('Latitude: ${LocationService.userLatitude}'),
-                  Text('Longitude: ${LocationService.userLongitude}'),
-                  Text('Time: ${DateFormat('dd-MM-yyyy - hh:mm a').format(DateTime.parse('${DateTime.now()}'))}'),
-                  kSpace(),
-                  // Text('Select Employee', style: k14BoldStyle()),
-                ],
+              child: Container(
+                padding: EdgeInsets.all(10),
+                decoration: roundedShadedDesign(context),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Location', style: k14BoldStyle()),
+                    Text(LocationService.userLocation),
+                    kRowText('Latitude: ', '${LocationService.userLatitude}'),
+                    kRowText('Longitude: ', '${LocationService.userLongitude}'),
+                    Text('Time: ${DateFormat('dd-MM-yyyy - hh:mm a').format(DateTime.parse('${DateTime.now()}'))}'),
+                  ],
+                ),
               ),
             ),
 
@@ -301,64 +352,6 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
             if(_image != null)
             Image.file(File(_image!.path), height: 200,),
 
-            // StreamBuilder(
-            //   stream: _firestore.collection('employee').snapshots(),
-            //   builder: (context, snapshot) {
-            //     if(snapshot.hasData){
-            //       var data = snapshot.data!.docs;
-            //       return labels.isNotEmpty ? ListView.builder(
-            //         shrinkWrap: true,
-            //         padding: EdgeInsets.symmetric(horizontal: 10),
-            //         physics: NeverScrollableScrollPhysics(),
-            //         // itemCount: labels.length > 1 ? 1 : labels.length,
-            //         itemCount: labels.length,
-            //         itemBuilder: (context, index){
-            //
-            //           RegExp regExp = RegExp(r'Label: ([^,]+), Confidence: ([\d.]+)');
-            //
-            //           // Finding all matches in the data string
-            //           Iterable<RegExpMatch> matches = regExp.allMatches(labels[index]);
-            //
-            //           // Extracting the label and confidence values
-            //           List<Map<String, dynamic>> extractedData = matches.map((match) {
-            //             return {
-            //               'Label': match.group(1),
-            //               'Confidence': double.parse(match.group(2)!)
-            //             };
-            //           }).toList();
-            //
-            //           // Printing the extracted data
-            //           extractedData.forEach((item) {
-            //             print('Label: ${item['Label']}, Confidence: ${item['Confidence']}');
-            //           });
-            //
-            //           return ListView.builder(
-            //               shrinkWrap: true,
-            //               physics: NeverScrollableScrollPhysics(),
-            //               itemCount: extractedData.length,
-            //               itemBuilder: (context, ind) {
-            //                 return GestureDetector(
-            //                   onTap: (){
-            //                     print(extractedData[ind]['Label']);
-            //
-            //                     // userID = data.firstWhere((user) => user['name'] == extractedData[ind]['Label']).reference.id;
-            //                   },
-            //                   child: Column(
-            //                     crossAxisAlignment: CrossAxisAlignment.start,
-            //                     children: [
-            //                       Text('Name: ${extractedData[ind]['Label']}'),
-            //                       Text('Confidence: ${extractedData[ind]['Confidence']}'),
-            //                     ],
-            //                   ),
-            //                 );
-            //               }
-            //           );
-            //         },
-            //       ) : Text('Not a Proper Image Scan Again');
-            //     }
-            //     return SizedBox.shrink();
-            //   }
-            // ),
             // if(employeeName != '')
             // matchPercentage > 90 ?
             // Column(
@@ -381,8 +374,20 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
             kBottomSpace(),
           ],
         ),
+      // ),
+      ) : Stack(
+        children: [
+          CameraPreview(_controller!),
+          Positioned(
+            top: 50,
+            right: 20,
+            child: FloatingActionButton(
+              onPressed: _flipCamera,
+              child: Icon(Icons.flip_camera_ios),
+            ),
+          ),
+        ],
       ),
-      // ) : CameraPreview(_controller!),
     );
   }
 
@@ -402,3 +407,63 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
     }
   }
 }
+
+///label data
+// StreamBuilder(
+//   stream: _firestore.collection('employee').snapshots(),
+//   builder: (context, snapshot) {
+//     if(snapshot.hasData){
+//       var data = snapshot.data!.docs;
+//       return labels.isNotEmpty ? ListView.builder(
+//         shrinkWrap: true,
+//         padding: EdgeInsets.symmetric(horizontal: 10),
+//         physics: NeverScrollableScrollPhysics(),
+//         // itemCount: labels.length > 1 ? 1 : labels.length,
+//         itemCount: labels.length,
+//         itemBuilder: (context, index){
+//
+//           RegExp regExp = RegExp(r'Label: ([^,]+), Confidence: ([\d.]+)');
+//
+//           // Finding all matches in the data string
+//           Iterable<RegExpMatch> matches = regExp.allMatches(labels[index]);
+//
+//           // Extracting the label and confidence values
+//           List<Map<String, dynamic>> extractedData = matches.map((match) {
+//             return {
+//               'Label': match.group(1),
+//               'Confidence': double.parse(match.group(2)!)
+//             };
+//           }).toList();
+//
+//           // Printing the extracted data
+//           extractedData.forEach((item) {
+//             print('Label: ${item['Label']}, Confidence: ${item['Confidence']}');
+//           });
+//
+//           return ListView.builder(
+//               shrinkWrap: true,
+//               physics: NeverScrollableScrollPhysics(),
+//               itemCount: extractedData.length,
+//               itemBuilder: (context, ind) {
+//                 return GestureDetector(
+//                   onTap: (){
+//                     print(extractedData[ind]['Label']);
+//
+//                     // userID = data.firstWhere((user) => user['name'] == extractedData[ind]['Label']).reference.id;
+//                   },
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     children: [
+//                       Text('Name: ${extractedData[ind]['Label']}'),
+//                       Text('Confidence: ${extractedData[ind]['Confidence']}'),
+//                     ],
+//                   ),
+//                 );
+//               }
+//           );
+//         },
+//       ) : Text('Not a Proper Image Scan Again');
+//     }
+//     return SizedBox.shrink();
+//   }
+// ),

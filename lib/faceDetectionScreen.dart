@@ -70,6 +70,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
       List<String> imageUrls = [];
       double matchPercentage = 0.0;
       String matchedImageUrl = '';
+      bool isMatchFound = false;
 
       // Collect all image URLs from the documents
       for (QueryDocumentSnapshot document in snapshot.docs) {
@@ -90,10 +91,13 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
             if (data['image'] == matchedImageUrl) {
               matchedData = data;
               giveAttendance(document.reference.id);
+              isMatchFound = true; // Mark match as found
               break; // Exit the inner loop once the match is found
             }
           }
-          break; // Exit the outer loop once the match is found
+          if (isMatchFound) {
+            break; // Exit the outer loop once the match is found
+          }
         }
       }
 
@@ -102,6 +106,12 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
         print('Matched image URL: $matchedImageUrl with percentage: $matchPercentage');
         print('Matched document data: $matchedData');
         // You can store this data in Firestore or any other storage
+      }
+
+      // If no match was found, show a message
+      if (!isMatchFound) {
+        // Replace this with your method to show a message, e.g., using a dialog or a snackbar
+        toastMessage(message: 'No matching image found, scan again');
       }
 
     } catch (e) {
@@ -237,6 +247,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
         setState(() {
           isLoading = false;
         });
+        toastMessage(message: 'Scan a proper image');
       });
 
     } catch (e) {

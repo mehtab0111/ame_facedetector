@@ -196,12 +196,16 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
         if (faces.isNotEmpty) {
           // Stop the camera
           await _controller?.stopImageStream();
+          setState(() {
+            _capturedFile = null;
+          });
           _captureImage();
         }
         _isDetecting = false;
       }).catchError((e) {
         _isDetecting = false;
         print('Error processing image: $e');
+        _restartCamera();
       });
     });
   }
@@ -247,12 +251,55 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
         setState(() {
           isLoading = false;
         });
-        toastMessage(message: 'Scan a proper image');
+        // toastMessage(message: 'Scan a proper image');
+        _restartCamera();
       });
 
     } catch (e) {
       print('Error capturing image: $e');
+      _restartCamera();
     }
+  }
+
+  void _restartCamera() {
+    _controller?.startImageStream((CameraImage image) {
+      if (_isDetecting) return;
+      _isDetecting = true;
+
+      final WriteBuffer allBytes = WriteBuffer();
+      for (Plane plane in image.planes) {
+        allBytes.putUint8List(plane.bytes);
+      }
+      final bytes = allBytes.done().buffer.asUint8List();
+
+      final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
+      final InputImageRotation imageRotation = _rotationIntToImageRotation(_controller!.description.sensorOrientation);
+      final InputImageFormat inputImageFormat = _imageFormatFromRawValue(image.format.raw);
+
+      final inputImageMetadata = InputImageMetadata(
+        size: imageSize,
+        rotation: imageRotation,
+        format: inputImageFormat,
+        bytesPerRow: image.planes.first.bytesPerRow,
+      );
+
+      final inputImage = InputImage.fromBytes(bytes: bytes, metadata: inputImageMetadata);
+
+      _faceDetector.processImage(inputImage).then((faces) async {
+        if (faces.isNotEmpty) {
+          // Stop the camera
+          await _controller?.stopImageStream();
+          setState(() {
+            _capturedFile = null;
+          });
+          _captureImage();
+        }
+        _isDetecting = false;
+      }).catchError((e) {
+        _isDetecting = false;
+        print('Error processing image: $e');
+      });
+    });
   }
 
   @override
@@ -328,32 +375,43 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
               ),
             ),
 
-            if(matchedData['name'] != null)
-            Text('${matchedData['name']}'),
-            if(matchedData['image'] != null)
-            Container(
-              height: 80,
-              width: 80,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage(matchedData['image']),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
+            // if(matchedData['name'] != null)
+            // Text('${matchedData['name']}'),
+            // if(matchedData['image'] != null)
+            // Container(
+            //   height: 80,
+            //   width: 80,
+            //   decoration: BoxDecoration(
+            //     image: DecorationImage(
+            //       image: NetworkImage(matchedData['image']),
+            //       fit: BoxFit.cover,
+            //     ),
+            //   ),
+            // ),
             kSpace(),
 
             if(isLoading != false)
             Container(
-              width: MediaQuery.of(context).size.width*0.8,
+              // width: MediaQuery.of(context).size.width*0.8,
               padding: EdgeInsets.all(10),
               decoration: roundedShadedDesign(context),
-              child: Row(
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Text('Detecting face'),
-                  SizedBox(width: 10),
-                  CircularProgressIndicator(),
+                children: [
+                  Container(
+                    height: 100,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.grey.withOpacity(0.4),
+                      image: DecorationImage(
+                        image: AssetImage('images/faceDetection.gif'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 5)
+,                  Text('Detecting\nFace', textAlign: TextAlign.center,),
                 ],
               ),
             ),
@@ -374,7 +432,10 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
             kSpace(),
             // if(employeeName != '')
             KButton(
-              onClick: _pickImage,
+              // onClick: _pickImage,
+              onClick: (){
+                _restartCamera();
+              },
               title: 'Scan Image',
             ),
 
@@ -412,7 +473,7 @@ class _FaceDetectionScreenState extends State<FaceDetectionScreen> {
         'userID': userID,
       });
       toastMessage(message: 'Attendance Saved');
-      Navigator.pop(context);
+      // Navigator.pop(context);
     } catch (e) {
       print(e);
     }

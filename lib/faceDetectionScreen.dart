@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:ame_facedetector/Controller/location.dart';
 import 'package:ame_facedetector/View/Components/buttons.dart';
-import 'package:ame_facedetector/View/Components/textField.dart';
 import 'package:ame_facedetector/View/Components/util.dart';
 import 'package:ame_facedetector/View/Theme/style.dart';
 import 'package:ame_facedetector/awsconfig.dart';
